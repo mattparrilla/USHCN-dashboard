@@ -42,8 +42,8 @@ def find_max_min(array):
     maximum = array[0][0]
     minimum = array[0][0]
 
-    for i in range(len(array)):
-        for j in range(len(array[0])):
+    for i, row in enumerate(array):
+        for j, column in enumerate(array[0]):
             value = array[i][j]
             if value > maximum:
                 maximum = value
