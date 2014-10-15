@@ -3,8 +3,18 @@
 from PIL import Image
 import csv
 
+# why does the 366 item in each array remain false (red)
+# while the holes in the data have been saved as zero in the array (green)?
 
-def dict_to_image(array):
+# Consider smoothing out the holes in the data too. Maybe average the missing
+# day against the year before and the year after
+
+# My averaging is smoothing things out more than I'd like to. I need to create
+# a new, separate array, not use the same one in place (since that will use
+# some already averaged values
+
+
+def array_to_image(array):
     """Take a dict of arrays and map it to an image"""
 
     width = len(array[0])
@@ -12,7 +22,7 @@ def dict_to_image(array):
 
     maximum, minimum = find_max_min(array)
 
-    unit_dimensions = (1, 2)  # to increase size of each data point (w,h)
+    unit_dimensions = (2, 4)  # to increase size of each data point (w,h)
 
     img = Image.new('RGB',
         ((unit_dimensions[0] * width), (unit_dimensions[1] * height)), (0, 0, 0))
@@ -23,9 +33,11 @@ def dict_to_image(array):
             temp = array[(j / unit_dimensions[1])][(i / unit_dimensions[0])]
             if temp is False:
                 pixels[i, j] = (255, 0, 0)
+            elif temp == 0:
+                pixels[i, j] = (0, 255, 0)
             else:
-                color = (temp * 205) / maximum
-                pixels[i, j] = (color, color, color)
+                color = int((temp * 205) / maximum)
+                pixels[i, j] = (color / 10, color / 10, color)
 
     img.show()
 
@@ -48,7 +60,7 @@ def find_max_min(array):
     return maximum, minimum
 
 
-def csv_to_array(csv_f):
+def csv_to_array(csv_f, average_zeros=False):
     f = csv.reader(open(csv_f, 'rU'))
     days = [l for l in f]
     del days[:2]
@@ -69,7 +81,7 @@ def csv_to_array(csv_f):
         array.append([False] * 366)
 
     # Here's what we're using below:
-    # day[1] = index of day 1-366
+    # day[1] = index of day (1-366)
     # day[4] = year
     # day[5] = temperature
 
@@ -80,30 +92,72 @@ def csv_to_array(csv_f):
             last_year = day[4]  # set new year
             row_of_array += 1  # update row
         try:
-            array[row_of_array][int(day[1]) - 1] = int(day[5])
+            array[row_of_array][int(day[1]) - 1] = float(day[5])
         except ValueError:
             pass
 
+    # smooths out the missing data by averaging year before and after
+    if average_zeros:
+        array = smooth_nulls(array)
+
     return array
 
 
-def array_of_averages(array):
+def smooth_nulls(array):
+    """This function takes an matrix and for any values that meets
+    a condition, it averages the value at the same index in both the preceding
+    and the following rows and assigns the result as its value"""
+
+    for i, year in enumerate(array):
+        for j, day in enumerate(year):
+            if day == 0:  # FIX: ideally this will be False, not zero
+                try:
+                    year_before = array[i - 1][j]
+                    year_after = array[i + 1][j]
+                    array[i][j] = (year_before + year_after) / 2
+                except IndexError:
+                    # this will throw IndexError on first and last year
+                    if i == 0:
+                        array[i][j] = array[i + 1][j]
+                    elif i > 0:
+                        array[i][j] = array[i - 1][j]
+
+    return array
+
+
+def five_day_averages(array):
+    """Takes a matrix and calculates the average of each cells five neighbors"""
     for i, row in enumerate(array):
         for j, item in enumerate(row):
+
             try:
-                five_day_sum = (array[i][j - 2] + array[i][j - 1] + array[i][j] +
-                    array[i][j + 1] + array[i][j + 1])
-                array[i][j] = five_day_sum / 5
+                running_sum = sum([safe_list_get(array[i], j - 2, 0),
+                    safe_list_get(array[i], j - 1, 0), array[i][j],
+                    safe_list_get(array[i], j + 1, 0),
+                    safe_list_get(array[i], j + 2, 0)])
+                array[i][j] = running_sum / 5
             except IndexError:
-                pass
+                # if index j+2 or j-2 don't exist
+                if j + 3 == len(row) or j == 1:
+                    array[i][j] = running_sum / 4
+                # if index j+1 or j-1 don't exist
+                elif j + 2 == len(row) or j == 0:
+                    array[i][j] = running_sum / 3
 
     return array
 
 
-def make_image(csv_f):
-    array = csv_to_array(csv_f)
-    averaged_array = array_of_averages(array)
-    img = dict_to_image(averaged_array)
+def safe_list_get(l, idx, default):
+    try:
+        return l[idx]
+    except IndexError:
+        return default
+
+
+def make_image(csv_f, avg_zeros=False):
+    array = csv_to_array(csv_f, average_zeros=True)
+    averaged_array = five_day_averages(array)
+    img = array_to_image(averaged_array)
     return img
 
-make_image('montana.csv')
+make_image('precip.csv')
