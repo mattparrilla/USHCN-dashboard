@@ -6,15 +6,8 @@ import csv
 # why does the 366 item in each array remain false (red)
 # while the holes in the data have been saved as zero in the array (green)?
 
-# Consider smoothing out the holes in the data too. Maybe average the missing
-# day against the year before and the year after
 
-# My averaging is smoothing things out more than I'd like to. I need to create
-# a new, separate array, not use the same one in place (since that will use
-# some already averaged values
-
-
-def array_to_image(array):
+def array_to_image(array, zero_color=(0, 0, 0)):
     """Take a dict of arrays and map it to an image"""
 
     width = len(array[0])
@@ -34,7 +27,7 @@ def array_to_image(array):
             if temp is False:
                 pixels[i, j] = (255, 0, 0)
             elif temp == 0:
-                pixels[i, j] = (0, 255, 0)
+                pixels[i, j] = zero_color
             else:
                 color = int((temp * 205) / maximum)
                 pixels[i, j] = (color / 10, color / 10, color)
@@ -60,7 +53,7 @@ def find_max_min(array):
     return maximum, minimum
 
 
-def csv_to_array(csv_f, average_zeros=False):
+def csv_to_array(csv_f, avg_zeros=False):
     f = csv.reader(open(csv_f, 'rU'))
     days = [l for l in f]
     del days[:2]
@@ -97,7 +90,7 @@ def csv_to_array(csv_f, average_zeros=False):
             pass
 
     # smooths out the missing data by averaging year before and after
-    if average_zeros:
+    if avg_zeros:
         array = smooth_nulls(array)
 
     return array
@@ -126,25 +119,28 @@ def smooth_nulls(array):
 
 
 def five_day_averages(array):
-    """Takes a matrix and calculates the average of each cells five neighbors"""
-    for i, row in enumerate(array):
-        for j, item in enumerate(row):
+    """Takes a matrix and creates a copy of the same dimensions of the
+    running average of the values for a five day period."""
 
+    new_array = []
+    for i, row in enumerate(array):
+        new_array.append([])
+        for j, item in enumerate(row):
             try:
                 running_sum = sum([safe_list_get(array[i], j - 2, 0),
                     safe_list_get(array[i], j - 1, 0), array[i][j],
                     safe_list_get(array[i], j + 1, 0),
                     safe_list_get(array[i], j + 2, 0)])
-                array[i][j] = running_sum / 5
+                new_array[i].append(running_sum / 5)
             except IndexError:
                 # if index j+2 or j-2 don't exist
                 if j + 3 == len(row) or j == 1:
-                    array[i][j] = running_sum / 4
+                    new_array[i].append(running_sum / 4)
                 # if index j+1 or j-1 don't exist
                 elif j + 2 == len(row) or j == 0:
-                    array[i][j] = running_sum / 3
+                    new_array[i].append(running_sum / 3)
 
-    return array
+    return new_array
 
 
 def safe_list_get(l, idx, default):
@@ -155,7 +151,7 @@ def safe_list_get(l, idx, default):
 
 
 def make_image(csv_f, avg_zeros=False):
-    array = csv_to_array(csv_f, average_zeros=True)
+    array = csv_to_array(csv_f, avg_zeros)
     averaged_array = five_day_averages(array)
     img = array_to_image(averaged_array)
     return img
