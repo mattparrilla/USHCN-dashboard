@@ -2,37 +2,61 @@
 
 from PIL import Image
 import csv
+import json
 
-# why does the 366 item in each array remain false (red)
-# while the holes in the data have been saved as zero in the array (green)?
+with open('colorbrewer.json', 'rU') as f:
+    colorbrewer = json.load(f)
+
+rainbow = ['ff0000', 'ff0000', 'ff8800', 'ffff00', '00ff00', '0000ff', '8800ff', 'ff00ff']
 
 
-def array_to_image(array, zero_color=(0, 0, 0)):
+def array_to_image(array, palette, similarity, dimensions):
     """Take a dict of arrays and map it to an image"""
 
-    width = len(array[0])
-    height = len(array)
-
+    width, height = len(array[0]), len(array)
     maximum, minimum = find_max_min(array)
 
-    unit_dimensions = (2, 4)  # to increase size of each data point (w,h)
-
     img = Image.new('RGB',
-        ((unit_dimensions[0] * width), (unit_dimensions[1] * height)), (0, 0, 0))
+        ((dimensions[0] * width), (dimensions[1] * height)), (0, 0, 0))
     pixels = img.load()
+
+    # define colors, bin size outside of loop
+    rgb = [tuple(map(ord, color.decode('hex'))) for color in palette]
+    bin_width = (maximum - minimum) / len(rgb)
 
     for i in range(img.size[0]):
         for j in range(img.size[1]):
-            temp = array[(j / unit_dimensions[1])][(i / unit_dimensions[0])]
+            temp = array[(j / dimensions[1])][(i / dimensions[0])]
             if temp is False:
                 pixels[i, j] = (255, 0, 0)
             elif temp == 0:
-                pixels[i, j] = zero_color
+                pixels[i, j] = (0, 255, 0)
             else:
-                color = int((temp * 205) / maximum)
-                pixels[i, j] = (color / 10, color / 10, color)
+                color = map_colors(temp, rgb, bin_width, minimum, similarity)
+                pixels[i, j] = color
 
     img.show()
+
+
+def map_colors(value, rgb, bin_width, minimum, similarity):
+    """Takes an array of colors and maps a value to a color. Values are
+    assigned to a bin with a base color, then, based on similarity (which
+    has a value of 0-1 and essentially determines how continuous/discrete to
+    make the output) and a value's distance from the bin threshold, it is
+    assigned a final color"""
+
+    bin_idx = int((value - minimum) // bin_width) - 1
+    bin_position = ((value - minimum) % bin_width) / bin_width
+
+    r, g, b = rgb[bin_idx]
+    nr, ng, nb = safe_list_get(rgb, bin_idx + 1, (255, 255, 255))
+
+    diff_r = bin_position * (similarity * (nr - r))
+    diff_g = bin_position * (similarity * (ng - g))
+    diff_b = bin_position * (similarity * (nb - b))
+
+    color = (int(r + diff_r), int(g + diff_g), int(b + diff_b))
+    return color
 
 
 def find_max_min(array):
@@ -53,51 +77,56 @@ def find_max_min(array):
     return maximum, minimum
 
 
-def csv_to_array(csv_f, avg_zeros=False):
+def csv_to_matrix(csv_f, unit, fill_zeros, smooth_values):
+    """Converts a USHCN csv into a matrix with each row a unique year and each
+    value a unique value"""
     f = csv.reader(open(csv_f, 'rU'))
-    days = [l for l in f]
-    del days[:2]
+    values = [l for l in f]
+    del values[:2]
+
+    if unit is "day":
+        length = 366
+        unit_idx = 1
+        year_idx = 4
+    else:
+        length = 12
+        unit_idx = 2
+        year_idx = 1
 
     years = []
-    #max_year = days[-1][4]
-    #year = days[0][4]
-    #while year >= max_year:
-    #    years.append(year)
-    #    year += 1
+    for value in values:
+        if value[year_idx] not in years:
+            years.append(value[year_idx])
 
-    for day in days:
-        if day[4] not in years:
-            years.append(day[4])
-
-    array = []
-    for year in years:
-        array.append([False] * 366)
+    array = [[False] * length for year in years]
 
     # Here's what we're using below:
     # day[1] = index of day (1-366)
     # day[4] = year
     # day[5] = temperature
 
-    last_year = days[0][4]  # define first year for comparison in loop
+    last_year = values[0][year_idx]  # define first year for comparison in loop
     row_of_array = 0
-    for day in days:
-        if day[4] != last_year:
-            last_year = day[4]  # set new year
+    for value in values:
+        if value[year_idx] != last_year:
+            last_year = value[year_idx]  # set new year
             row_of_array += 1  # update row
         try:
-            array[row_of_array][int(day[1]) - 1] = float(day[5])
-        except ValueError:
+            array[row_of_array][int(value[unit_idx]) - 1] = float(value[-1])
+        except:
             pass
 
-    # smooths out the missing data by averaging year before and after
-    if avg_zeros:
+    if fill_zeros:
         array = smooth_nulls(array)
+
+    if smooth_values:
+        array = five_day_averages(array)
 
     return array
 
 
 def smooth_nulls(array):
-    """This function takes an matrix and for any values that meets
+    """This function takes a matrix as an input. For any values that meet
     a condition, it averages the value at the same index in both the preceding
     and the following rows and assigns the result as its value"""
 
@@ -126,19 +155,15 @@ def five_day_averages(array):
     for i, row in enumerate(array):
         new_array.append([])
         for j, item in enumerate(row):
-            try:
-                running_sum = sum([safe_list_get(array[i], j - 2, 0),
-                    safe_list_get(array[i], j - 1, 0), array[i][j],
-                    safe_list_get(array[i], j + 1, 0),
-                    safe_list_get(array[i], j + 2, 0)])
-                new_array[i].append(running_sum / 5)
-            except IndexError:
-                # if index j+2 or j-2 don't exist
-                if j + 3 == len(row) or j == 1:
-                    new_array[i].append(running_sum / 4)
-                # if index j+1 or j-1 don't exist
-                elif j + 2 == len(row) or j == 0:
-                    new_array[i].append(running_sum / 3)
+            five_days = [safe_list_get(array[i], j - 2, False),
+                safe_list_get(array[i], j - 1, False), array[i][j],
+                safe_list_get(array[i], j + 1, False),
+                safe_list_get(array[i], j + 2, False)]
+            valid_days = 5 - five_days.count(False)
+            if valid_days == 0:
+                new_array[i].append(False)
+            else:
+                new_array[i].append(sum(five_days) / valid_days)
 
     return new_array
 
@@ -150,10 +175,18 @@ def safe_list_get(l, idx, default):
         return default
 
 
-def make_image(csv_f, avg_zeros=False):
-    array = csv_to_array(csv_f, avg_zeros)
-    averaged_array = five_day_averages(array)
-    img = array_to_image(averaged_array)
+def make_image():
+    csv_f = "data/%s.csv" % raw_input("What file to visualize: ")
+    unit = raw_input("What is unit (blank for day): ") or 'day'
+    fill_zeros = raw_input("Should null values be filled? (blank = no): ")
+    smooth_values = raw_input("Should the values be smoothed? (blank = no): ")
+    palette = eval(raw_input("What palette to use (blank = b/w): ") or ['ffffff',
+        '000000'])
+    similarity = float(raw_input("How similar to the next bin should " +
+        "color be? \n(On a scale 0-1, default=not similar) ")) or 0
+
+    array = csv_to_matrix(csv_f, unit, fill_zeros, smooth_values)
+    img = array_to_image(array, palette, similarity, dimensions=(2, 4))
     return img
 
-make_image('precip.csv')
+make_image()
