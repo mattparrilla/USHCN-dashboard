@@ -7,7 +7,7 @@ import json
 with open('colorbrewer.json', 'rU') as f:
     colorbrewer = json.load(f)
 
-rainbow = ['ff0000', 'ff0000', 'ff8800', 'ffff00', '00ff00', '0000ff', '8800ff', 'ff00ff']
+rainbow = ['000000', 'ff0000', 'ff8800', 'ffff00', '88ff00', '00ff00', '0000ff', '8800ff', 'ff00ff']
 
 
 def array_to_image(array, palette, similarity, dimensions):
@@ -22,20 +22,19 @@ def array_to_image(array, palette, similarity, dimensions):
 
     # define colors, bin size outside of loop
     rgb = [tuple(map(ord, color.decode('hex'))) for color in palette]
-    bin_width = (maximum - minimum) / len(rgb)
+    bin_width = (maximum - minimum) / (len(rgb) - 1)
 
     for i in range(img.size[0]):
         for j in range(img.size[1]):
             temp = array[(j / dimensions[1])][(i / dimensions[0])]
             if temp is False:
-                pixels[i, j] = (255, 0, 0)
-            elif temp == 0:
-                pixels[i, j] = (0, 255, 0)
+                pixels[i, j] = (255, 255, 255)
             else:
                 color = map_colors(temp, rgb, bin_width, minimum, similarity)
                 pixels[i, j] = color
 
     img.show()
+    return img
 
 
 def map_colors(value, rgb, bin_width, minimum, similarity):
@@ -45,7 +44,7 @@ def map_colors(value, rgb, bin_width, minimum, similarity):
     make the output) and a value's distance from the bin threshold, it is
     assigned a final color"""
 
-    bin_idx = int((value - minimum) // bin_width) - 1
+    bin_idx = int((value - minimum) // bin_width)
     bin_position = ((value - minimum) % bin_width) / bin_width
 
     r, g, b = rgb[bin_idx]
@@ -77,7 +76,8 @@ def find_max_min(array):
     return maximum, minimum
 
 
-def csv_to_matrix(csv_f, unit, fill_zeros, smooth_values):
+def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
+        recursion):
     """Converts a USHCN csv into a matrix with each row a unique year and each
     value a unique value"""
     f = csv.reader(open(csv_f, 'rU'))
@@ -116,11 +116,17 @@ def csv_to_matrix(csv_f, unit, fill_zeros, smooth_values):
         except:
             pass
 
-    if fill_zeros:
+    if fill_null:
         array = smooth_nulls(array)
 
-    if smooth_values:
-        array = five_day_averages(array)
+    while recursion > 0:
+        if smooth_horizontal:
+            array = five_day_averages(array)
+
+        if smooth_vertical:
+            array = five_day_averages(array, direction="vertical")
+
+        recursion -= 1
 
     return array
 
@@ -132,7 +138,7 @@ def smooth_nulls(array):
 
     for i, year in enumerate(array):
         for j, day in enumerate(year):
-            if day == 0:  # FIX: ideally this will be False, not zero
+            if day is False:  # FIX: ideally this will be False, not zero
                 try:
                     year_before = array[i - 1][j]
                     year_after = array[i + 1][j]
@@ -147,7 +153,7 @@ def smooth_nulls(array):
     return array
 
 
-def five_day_averages(array):
+def five_day_averages(array, direction=False):
     """Takes a matrix and creates a copy of the same dimensions of the
     running average of the values for a five day period."""
 
@@ -155,38 +161,61 @@ def five_day_averages(array):
     for i, row in enumerate(array):
         new_array.append([])
         for j, item in enumerate(row):
-            five_days = [safe_list_get(array[i], j - 2, False),
-                safe_list_get(array[i], j - 1, False), array[i][j],
-                safe_list_get(array[i], j + 1, False),
-                safe_list_get(array[i], j + 2, False)]
+            if direction is "vertical":
+                five_days = [safe_list_get(array, i - 2, False, j),
+                    safe_list_get(array, i - 1, False, j), array[i][j],
+                    safe_list_get(array, i + 1, False, j),
+                    safe_list_get(array, i + 2, False, j)]
+            else:
+                five_days = [safe_list_get(array[i], j - 2, False),
+                    safe_list_get(array[i], j - 1, False), array[i][j],
+                    safe_list_get(array[i], j + 1, False),
+                    safe_list_get(array[i], j + 2, False)]
             valid_days = 5 - five_days.count(False)
             if valid_days == 0:
                 new_array[i].append(False)
             else:
+
                 new_array[i].append(sum(five_days) / valid_days)
 
     return new_array
 
 
-def safe_list_get(l, idx, default):
+def safe_list_get(l, idx, default, additional=-1):
     try:
-        return l[idx]
+        if additional >= 0:
+            return l[idx][int(additional)]
+        else:
+            return l[idx]
     except IndexError:
         return default
 
 
 def make_image():
-    csv_f = "data/%s.csv" % raw_input("What file to visualize: ")
-    unit = raw_input("What is unit (blank for day): ") or 'day'
-    fill_zeros = raw_input("Should null values be filled? (blank = no): ")
-    smooth_values = raw_input("Should the values be smoothed? (blank = no): ")
-    palette = eval(raw_input("What palette to use (blank = b/w): ") or ['ffffff',
-        '000000'])
-    similarity = float(raw_input("How similar to the next bin should " +
-        "color be? \n(On a scale 0-1, default=not similar) ")) or 0
+    favorites = {
+        'black_white': ['000000', 'ffffff'],
+        'paired': colorbrewer['Paired']['9'],
+        'red': colorbrewer['YlOrRd']['9']
+    }
 
-    array = csv_to_matrix(csv_f, unit, fill_zeros, smooth_values)
-    img = array_to_image(array, palette, similarity, dimensions=(2, 4))
+    f_n = "st-j"
+    csv_f = "data/%s.csv" % f_n
+    unit = 'day'
+    fill_null = 'fillNull'
+    smooth_horizontal = 'x'
+    smooth_vertical = 'y'
+    palette = 'paired'
+    dimensions = (2, 4)
+    similarity = 0
+    recursion = 2
+
+    array = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
+        smooth_vertical, recursion)
+    img = array_to_image(array, favorites[palette], similarity, dimensions)
+    save_image = raw_input('Save image? ')
+    if save_image:
+        img.save('img/%s-%s-%s-%s%s%s-%s.png' % (f_n, palette, fill_null,
+            recursion, smooth_horizontal, smooth_vertical, similarity))
     return img
 
 make_image()
