@@ -10,6 +10,34 @@ with open('colorbrewer.json', 'rU') as f:
 rainbow = ['000000', 'ff0000', 'ff8800', 'ffff00', '88ff00', '00ff00', '0000ff', '8800ff', 'ff00ff']
 
 
+def make_image():
+    favorites = {
+        'black_white': ['000000', 'ffffff'],
+        'paired': colorbrewer['Paired']['9'],
+        'red': colorbrewer['YlOrRd']['9']
+    }
+
+    f_n = "nyc"
+    csv_f = "data/%s.csv" % f_n
+    unit = 'day'
+    fill_null = 'fillNull'
+    smooth_horizontal = 'x'
+    smooth_vertical = 'y'
+    palette = 'paired'
+    dimensions = (2, 4)
+    similarity = 0.85
+    recursion = 2
+
+    array = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
+        smooth_vertical, recursion)
+    img = array_to_image(array, favorites[palette], similarity, dimensions)
+    save_image = raw_input('Save image? ')
+    if save_image:
+        img.save('img/%s-%s-%s-%s%s%s-%s.png' % (f_n, palette, fill_null,
+            recursion, smooth_horizontal, smooth_vertical, similarity))
+    return img
+
+
 def array_to_image(array, palette, similarity, dimensions):
     """Take a dict of arrays and map it to an image"""
 
@@ -189,33 +217,5 @@ def safe_list_get(l, idx, default, additional=-1):
             return l[idx]
     except IndexError:
         return default
-
-
-def make_image():
-    favorites = {
-        'black_white': ['000000', 'ffffff'],
-        'paired': colorbrewer['Paired']['9'],
-        'red': colorbrewer['YlOrRd']['9']
-    }
-
-    f_n = "st-j"
-    csv_f = "data/%s.csv" % f_n
-    unit = 'day'
-    fill_null = 'fillNull'
-    smooth_horizontal = 'x'
-    smooth_vertical = 'y'
-    palette = 'paired'
-    dimensions = (2, 4)
-    similarity = 0
-    recursion = 2
-
-    array = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
-        smooth_vertical, recursion)
-    img = array_to_image(array, favorites[palette], similarity, dimensions)
-    save_image = raw_input('Save image? ')
-    if save_image:
-        img.save('img/%s-%s-%s-%s%s%s-%s.png' % (f_n, palette, fill_null,
-            recursion, smooth_horizontal, smooth_vertical, similarity))
-    return img
 
 make_image()
