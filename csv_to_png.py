@@ -17,19 +17,20 @@ def make_image():
         'red': colorbrewer['YlOrRd']['9']
     }
 
-    f_n = "nyc"
+    f_n = "snow"
     csv_f = "data/%s.csv" % f_n
     unit = 'day'
     fill_null = 'fillNull'
     smooth_horizontal = 'x'
     smooth_vertical = 'y'
-    palette = 'paired'
+    palette = 'black_white'
     dimensions = (2, 4)
-    similarity = 0.85
-    recursion = 2
+    similarity = 1
+    recursion = 4
+    start_idx = 180
 
     array = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
-        smooth_vertical, recursion)
+        smooth_vertical, recursion, start_idx)
     img = array_to_image(array, favorites[palette], similarity, dimensions)
     save_image = raw_input('Save image? ')
     if save_image:
@@ -57,6 +58,8 @@ def array_to_image(array, palette, similarity, dimensions):
             temp = array[(j / dimensions[1])][(i / dimensions[0])]
             if temp is False:
                 pixels[i, j] = (255, 255, 255)
+            elif temp == 0:
+                pixels[i, j] = (0, 255, 0)
             else:
                 color = map_colors(temp, rgb, bin_width, minimum, similarity)
                 pixels[i, j] = color
@@ -105,7 +108,7 @@ def find_max_min(array):
 
 
 def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
-        recursion):
+        recursion, start_idx=False):
     """Converts a USHCN csv into a matrix with each row a unique year and each
     value a unique value"""
     f = csv.reader(open(csv_f, 'rU'))
@@ -144,6 +147,9 @@ def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
         except:
             pass
 
+    if start_idx:
+        array = shift_array(array, start_idx)
+
     if fill_null:
         array = smooth_nulls(array)
 
@@ -157,6 +163,18 @@ def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
         recursion -= 1
 
     return array
+
+
+def shift_array(array, start_idx):
+    """Shifts an array so a particular index is now 0"""
+
+    dimensions = (len(array[0]), len(array))
+    new_array = [[False] * dimensions[0] for i in range(len(array))]
+    for i, row in enumerate(array):
+        for j, value in enumerate(row):
+            new_array[i][j - start_idx] = value
+
+    return new_array
 
 
 def smooth_nulls(array):
@@ -187,7 +205,7 @@ def five_day_averages(array, direction=False):
 
     new_array = []
     for i, row in enumerate(array):
-        new_array.append([])
+        new_array.append([False] * len(row))
         for j, item in enumerate(row):
             if direction is "vertical":
                 five_days = [safe_list_get(array, i - 2, False, j),
@@ -195,16 +213,15 @@ def five_day_averages(array, direction=False):
                     safe_list_get(array, i + 1, False, j),
                     safe_list_get(array, i + 2, False, j)]
             else:
-                five_days = [safe_list_get(array[i], j - 2, False),
-                    safe_list_get(array[i], j - 1, False), array[i][j],
-                    safe_list_get(array[i], j + 1, False),
-                    safe_list_get(array[i], j + 2, False)]
+                five_days = [safe_list_get(row, j - 2, False),
+                    safe_list_get(row, j - 1, False), array[i][j],
+                    safe_list_get(row, j + 1, False),
+                    safe_list_get(row, j + 2, False)]
             valid_days = 5 - five_days.count(False)
             if valid_days == 0:
-                new_array[i].append(False)
+                new_array[i][j] = False
             else:
-
-                new_array[i].append(sum(five_days) / valid_days)
+                new_array[i][j] = sum(five_days) / valid_days
 
     return new_array
 
