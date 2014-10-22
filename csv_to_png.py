@@ -17,22 +17,22 @@ def make_image():
         'red': colorbrewer['YlOrRd']['9']
     }
 
-    f_n = "snow"
+    f_n = "tahoe-precip"
     csv_f = "data/%s.csv" % f_n
     unit = 'day'
-    fill_null = 'fillNull'
+    fill_null = False  # 'fillNull'
     smooth_horizontal = 'x'
-    smooth_vertical = 'y'
-    palette = 'black_white'
+    smooth_vertical = False and 'y'
+    palette = 'red'
     dimensions = (2, 4)
-    similarity = 1
-    recursion = 4
-    start_idx = 180
+    similarity = 0.3
+    recursion = 5
+    start_idx = 182  # July 1 is 182
+    save_image = True
 
     array = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
         smooth_vertical, recursion, start_idx)
     img = array_to_image(array, favorites[palette], similarity, dimensions)
-    save_image = raw_input('Save image? ')
     if save_image:
         img.save('img/%s-%s-%s-%s%s%s-%s.png' % (f_n, palette, fill_null,
             recursion, smooth_horizontal, smooth_vertical, similarity))
@@ -56,13 +56,13 @@ def array_to_image(array, palette, similarity, dimensions):
     for i in range(img.size[0]):
         for j in range(img.size[1]):
             temp = array[(j / dimensions[1])][(i / dimensions[0])]
-            if temp is False:
-                pixels[i, j] = (255, 255, 255)
-            elif temp == 0:
-                pixels[i, j] = (0, 255, 0)
-            else:
-                color = map_colors(temp, rgb, bin_width, minimum, similarity)
-                pixels[i, j] = color
+            #if temp is False:
+            #    pixels[i, j] = (100, 100, 100)
+            #elif temp == 0:
+            #    pixels[i, j] = (0, 255, 0)
+            #else:
+            color = map_colors(temp, rgb, bin_width, minimum, similarity)
+            pixels[i, j] = color
 
     img.show()
     return img
@@ -147,6 +147,7 @@ def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
         except:
             pass
 
+    #del array[:20]
     if start_idx:
         array = shift_array(array, start_idx)
 
@@ -154,12 +155,10 @@ def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
         array = smooth_nulls(array)
 
     while recursion > 0:
-        if smooth_horizontal:
-            array = five_day_averages(array)
-
         if smooth_vertical:
             array = five_day_averages(array, direction="vertical")
-
+        if smooth_horizontal:
+            array = five_day_averages(array)
         recursion -= 1
 
     return array
@@ -212,22 +211,27 @@ def five_day_averages(array, direction=False):
                     safe_list_get(array, i - 1, False, j), array[i][j],
                     safe_list_get(array, i + 1, False, j),
                     safe_list_get(array, i + 2, False, j)]
+                if i == 0 or i + 1 == len(array):
+                    new_array[i][j] = sum(five_days) / 3
+                elif i == 1 or i + 2 == len(array):
+                    new_array[i][j] = sum(five_days) / 4
+                else:
+                    new_array[i][j] = sum(five_days) / 5
             else:
                 five_days = [safe_list_get(row, j - 2, False),
                     safe_list_get(row, j - 1, False), array[i][j],
                     safe_list_get(row, j + 1, False),
                     safe_list_get(row, j + 2, False)]
-            valid_days = 5 - five_days.count(False)
-            if valid_days == 0:
-                new_array[i][j] = False
-            else:
-                new_array[i][j] = sum(five_days) / valid_days
+                new_array[i][j] = sum(five_days) / 5
 
     return new_array
 
 
 def safe_list_get(l, idx, default, additional=-1):
     try:
+        if idx < 0:
+            return default
+
         if additional >= 0:
             return l[idx][int(additional)]
         else:
