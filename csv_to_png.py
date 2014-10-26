@@ -17,17 +17,17 @@ def make_image():
         'red': colorbrewer['YlOrRd']['9']
     }
 
-    f_n = "tahoe-precip"
+    f_n = "btv"
     csv_f = "data/%s.csv" % f_n
     unit = 'day'
     fill_null = False  # 'fillNull'
     smooth_horizontal = 'x'
     smooth_vertical = False and 'y'
-    palette = 'red'
+    palette = 'black_white'
     dimensions = (2, 4)
-    similarity = 0.3
-    recursion = 5
-    start_idx = 182  # July 1 is 182
+    similarity = 1
+    recursion = 0
+    start_idx = False  # July 1 is 182
     save_image = True
 
     array = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
@@ -56,13 +56,11 @@ def array_to_image(array, palette, similarity, dimensions):
     for i in range(img.size[0]):
         for j in range(img.size[1]):
             temp = array[(j / dimensions[1])][(i / dimensions[0])]
-            #if temp is False:
-            #    pixels[i, j] = (100, 100, 100)
-            #elif temp == 0:
-            #    pixels[i, j] = (0, 255, 0)
-            #else:
-            color = map_colors(temp, rgb, bin_width, minimum, similarity)
-            pixels[i, j] = color
+            if temp is False:
+                pixels[i, j] = (255, 0, 0)
+            else:
+                color = map_colors(temp, rgb, bin_width, minimum, similarity)
+                pixels[i, j] = color
 
     img.show()
     return img
