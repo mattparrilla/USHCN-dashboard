@@ -1,5 +1,82 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>{{ title }}</h1>
+<form role="form">
+    <div class="form-group">
+        <label for="unit">Unit of Time</label>
+        <select name="unit">
+            <option value="day">Day</option>
+            <option value="month">Month</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="exampleInputEmail1">Email address</label>
+        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email">
+    </div>
+    <div class="form-group">
+        <label for="exampleInputPassword1">Password</label>
+        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
+    </div>
+    <div class="form-group">
+        <label for="exampleInputFile">File input</label>
+        <input type="file" id="exampleInputFile">
+        <p class="help-block">Example block-level help text here.</p>
+    </div>
+    <div class="form-group">
+        <label for="exampleInputFile">File input</label>
+        <select name="color">
+            <option value="YlGn">YlGn</option>
+            <option value="YlGnBu">YlGnBu</option>
+            <option value="GnBu">GnBu</option>
+            <option value="BuGn">BuGn</option>
+            <option value="PuBuGn">PuBuGn</option>
+            <option value="PuBu">PuBu</option>
+            <option value="BuPu">BuPu</option>
+            <option value="RdPu">RdPu</option>
+            <option value="PuRd">PuRd</option>
+            <option value="OrRd">OrRd</option>
+            <option value="YlOrRd">YlOrRd</option>
+            <option value="YlOrBr">YlOrBr</option>
+            <option value="Purples">Purples</option>
+            <option value="Blues">Blues</option>
+            <option value="Greens">Greens</option>
+            <option value="Oranges">Oranges</option>
+            <option value="Reds">Reds</option>
+            <option value="Greys">Greys</option>
+            <option value="PuOr">PuOr</option>
+            <option value="BrBG">BrBG</option>
+            <option value="PRGn">PRGn</option>
+            <option value="PiYG">PiYG</option>
+            <option value="RdBu">RdBu</option>
+            <option value="RdGy">RdGy</option>
+            <option value="RdYlBu">RdYlBu</option>
+            <option value="Spectral">Spectral</option>
+            <option value="RdYlGn">RdYlGn</option>
+            <option value="Accent">Accent</option>
+            <option value="Dark2">Dark2</option>
+            <option value="Paired">Paired</option>
+            <option value="Pastel1">Pastel1</option>
+            <option value="Pastel2">Pastel2</option>
+            <option value="Set1">Set1</option>
+            <option value="Set2">Set2</option>
+            <option value="Set3">Set3</option>
+        </select>
+    </div>
+    <div class="checkbox">
+        <label><input type="checkbox" name="fill_null"> Fill Null</label>
+    </div>
+    <div class="checkbox">
+        <label><input type="checkbox" name="smooth_horizontal"> Smooth Horizontal</label>
+    </div>
+    <div class="checkbox">
+        <label><input type="checkbox" name="smooth_vertical"> Smooth Vertical</label>
+    </div>
+    <div class="checkbox">
+        <label><input type="checkbox" name="smooth_horizontal"> Smooth Horizontal</label>
+    </div>
+    <div class="checkbox">
+        <label><input type="checkbox" name="smooth_vertical"> Smooth Vertical</label>
+    </div>
+    <button type="submit" class="btn btn-default">Submit</button>
+</form>
 {% endblock %}
