@@ -22,7 +22,7 @@
 
                 form.change(function () {
                     var data = $(this).serialize(),
-                        src = 'http://dummyimage.com/800x600/4d494d/686a82.gif&text=' + data;
+                        src = '/img/?' + data;
 
                     img.attr('src', src);
                 });
