@@ -12,7 +12,7 @@ rainbow = ['000000', 'ff0000', 'ff8800', 'ffff00', '88ff00', '00ff00', '0000ff',
 
 def make_image(f_n='btv', fill_null=True,
                unit='day', smooth_horizontal=False, smooth_vertical=False,
-               palette='paired', bins='4', dimensions=(2, 4), similarity=1,
+               palette='Set1', bins='4', dimensions=(2, 4), similarity=1,
                recursion=0, start_idx=False, save_image=False):
 
     csv_f = "data/%s.csv" % f_n

@@ -9,6 +9,11 @@
         <title>{{ title }}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="{{ description }}">
+        <style type="text/css">
+            img {
+                max-width: 100%;
+            }
+        </style>
     </head>
 
     <body>
@@ -22,10 +27,10 @@
 
                 form.change(function () {
                     var data = $(this).serialize(),
-                        src = 'http://dummyimage.com/800x600/4d494d/686a82.gif&text=' + data;
+                        src = '/img/?' + data;
 
                     img.attr('src', src);
-                });
+                }).change();
             });
         </script>
     </body>
