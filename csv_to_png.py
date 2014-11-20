@@ -11,31 +11,33 @@ rainbow = ['000000', 'ff0000', 'ff8800', 'ffff00', '88ff00', '00ff00', '0000ff',
 
 
 def make_image():
-    favorites = {
+    palettes = {
         'black_white': ['000000', 'ffffff'],
-        'paired': colorbrewer['Paired']['9'],
-        'red': colorbrewer['YlOrRd']['9']
+        'paired': colorbrewer['Paired'],
+        'red': colorbrewer['YlOrRd']
     }
 
     f_n = "btv"
     csv_f = "data/%s.csv" % f_n
     unit = 'day'
-    fill_null = False  # 'fillNull'
-    smooth_horizontal = 'x'
-    smooth_vertical = False and 'y'
-    palette = 'black_white'
-    dimensions = (2, 4)
-    similarity = 1
-    recursion = 0
+    fill_null = True  # 'fillNull'
+    smooth_horizontal = False
+    smooth_vertical = False
+    palette = 'paired'
+    bins = '4'
+    dimensions = (4, 4)
+    similarity = 0.5
+    recursion = 2
     start_idx = False  # July 1 is 182
-    save_image = True
+    save_image = False
 
     array = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
         smooth_vertical, recursion, start_idx)
-    img = array_to_image(array, favorites[palette], similarity, dimensions)
+    img = array_to_image(array, palettes[palette][bins], similarity, dimensions)
     if save_image:
         img.save('img/%s-%s-%s-%s%s%s-%s.png' % (f_n, palette, fill_null,
-            recursion, smooth_horizontal, smooth_vertical, similarity))
+            recursion, 'x' if smooth_horizontal else '',
+            'y' if smooth_vertical else '', similarity))
     return img
 
 
@@ -56,11 +58,11 @@ def array_to_image(array, palette, similarity, dimensions):
     for i in range(img.size[0]):
         for j in range(img.size[1]):
             temp = array[(j / dimensions[1])][(i / dimensions[0])]
-            if temp is False:
-                pixels[i, j] = (255, 0, 0)
-            else:
-                color = map_colors(temp, rgb, bin_width, minimum, similarity)
-                pixels[i, j] = color
+            # if temp is False:
+            #     pixels[i, j] = (255, 0, 0)
+            # else:
+            color = map_colors(temp, rgb, bin_width, minimum, similarity)
+            pixels[i, j] = color
 
     img.show()
     return img
@@ -205,10 +207,12 @@ def five_day_averages(array, direction=False):
         new_array.append([False] * len(row))
         for j, item in enumerate(row):
             if direction is "vertical":
+                # Builds an array of the value on this date over the surrounding five years
                 five_days = [safe_list_get(array, i - 2, False, j),
-                    safe_list_get(array, i - 1, False, j), array[i][j],
-                    safe_list_get(array, i + 1, False, j),
-                    safe_list_get(array, i + 2, False, j)]
+                             safe_list_get(array, i - 1, False, j),
+                             array[i][j],
+                             safe_list_get(array, i + 1, False, j),
+                             safe_list_get(array, i + 2, False, j)]
                 if i == 0 or i + 1 == len(array):
                     new_array[i][j] = sum(five_days) / 3
                 elif i == 1 or i + 2 == len(array):
@@ -216,11 +220,15 @@ def five_day_averages(array, direction=False):
                 else:
                     new_array[i][j] = sum(five_days) / 5
             else:
+                # Builds an array of the value on this surrounding five days
                 five_days = [safe_list_get(row, j - 2, False),
-                    safe_list_get(row, j - 1, False), array[i][j],
-                    safe_list_get(row, j + 1, False),
-                    safe_list_get(row, j + 2, False)]
+                             safe_list_get(row, j - 1, False),
+                             array[i][j],
+                             safe_list_get(row, j + 1, False),
+                             safe_list_get(row, j + 2, False)]
                 new_array[i][j] = sum(five_days) / 5
+
+                # TODO: Consider beginning and end of year
 
     return new_array
 
