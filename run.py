@@ -30,8 +30,9 @@ def serve_pil_image(pil_img):
 
 @app.route('/img/')
 def get_image():
+    image, name = make_image(**request.args.to_dict())
     print request.args
-    image = make_image(**request.args.to_dict())
+    print name
     return serve_pil_image(image)
 
 if __name__ == '__main__':
