@@ -21,8 +21,8 @@ def make_image():
     csv_f = "data/%s.csv" % f_n
     unit = 'day'
     fill_null = True  # 'fillNull'
-    smooth_horizontal = 'x'
-    smooth_vertical = False and 'y'
+    smooth_horizontal = False
+    smooth_vertical = False
     palette = 'paired'
     bins = '4'
     dimensions = (4, 4)
@@ -36,7 +36,8 @@ def make_image():
     img = array_to_image(array, palettes[palette][bins], similarity, dimensions)
     if save_image:
         img.save('img/%s-%s-%s-%s%s%s-%s.png' % (f_n, palette, fill_null,
-            recursion, smooth_horizontal, smooth_vertical, similarity))
+            recursion, 'x' if smooth_horizontal else '',
+            'y' if smooth_vertical else '', similarity))
     return img
 
 
