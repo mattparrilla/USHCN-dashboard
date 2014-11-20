@@ -25,7 +25,7 @@ def serve_pil_image(pil_img):
 @app.route('/img/')
 def get_image():
     print request.args
-    image = make_image(**request.args)
+    image = make_image(**request.args.to_dict())
     return serve_pil_image(image)
 
 if __name__ == '__main__':
