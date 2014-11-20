@@ -13,7 +13,7 @@ rainbow = ['000000', 'ff0000', 'ff8800', 'ffff00', '88ff00', '00ff00', '0000ff',
 def make_image(f_n='btv', fill_null=True,
                unit='day', smooth_horizontal=False, smooth_vertical=False,
                palette='Set1', bins='8', x_d=2, y_d=4, continuity=1,
-               recursion=0, start_idx=False, save_image=False):
+               similarity=1, recursion=0, start_idx=False, save_image=False):
 
     """This function generates the image, which is then passed to the view as
     a string. All image parameters are defined here."""
