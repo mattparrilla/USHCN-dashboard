@@ -15,5 +15,18 @@
         {% block content %}{% endblock %}
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                var form = $('form').first(),
+                    img = $('img').first();
+
+                form.change(function () {
+                    var data = $(this).serialize(),
+                        src = 'http://dummyimage.com/800x600/4d494d/686a82.gif&text=' + data;
+
+                    img.attr('src', src);
+                });
+            });
+        </script>
     </body>
 </html>
