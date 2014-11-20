@@ -15,18 +15,12 @@ def make_image(f_n='btv', fill_null=True,
                palette='paired', bins='4', dimensions=(2, 2), similarity=1,
                recursion=0, start_idx=False, save_image=False):
 
-    palettes = {
-        'black_white': ['000000', 'ffffff'],
-        'paired': colorbrewer['Paired'],
-        'red': colorbrewer['YlOrRd']
-    }
-
     csv_f = "data/%s.csv" % f_n
     save_image = False
 
     array = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
         smooth_vertical, recursion, start_idx)
-    img = array_to_image(array, palettes[palette][bins], similarity, dimensions)
+    img = array_to_image(array, colorbrewer[palette][bins], similarity, dimensions)
     if save_image:
         img.save('img/%s-%s-%s-%s%s%s-%s.png' % (f_n, palette, fill_null,
             recursion, 'x' if smooth_horizontal else '',

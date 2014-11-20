@@ -1,5 +1,81 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>{{ title }}</h1>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-4">
+            <form role="form">
+                <div class="form-group">
+                    <label for="unit">Unit of Time</label><br />
+                    <select name="unit">
+                        <option value="day">Day</option>
+                        <option value="month">Month</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputFile">File input</label><br />
+                    <select name="palettes">
+                        <option value="YlGn">YlGn</option>
+                        <option value="YlGnBu">YlGnBu</option>
+                        <option value="GnBu">GnBu</option>
+                        <option value="BuGn">BuGn</option>
+                        <option value="PuBuGn">PuBuGn</option>
+                        <option value="PuBu">PuBu</option>
+                        <option value="BuPu">BuPu</option>
+                        <option value="RdPu">RdPu</option>
+                        <option value="PuRd">PuRd</option>
+                        <option value="OrRd">OrRd</option>
+                        <option value="YlOrRd">YlOrRd</option>
+                        <option value="YlOrBr">YlOrBr</option>
+                        <option value="Purples">Purples</option>
+                        <option value="Blues">Blues</option>
+                        <option value="Greens">Greens</option>
+                        <option value="Oranges">Oranges</option>
+                        <option value="Reds">Reds</option>
+                        <option value="Greys">Greys</option>
+                        <option value="PuOr">PuOr</option>
+                        <option value="BrBG">BrBG</option>
+                        <option value="PRGn">PRGn</option>
+                        <option value="PiYG">PiYG</option>
+                        <option value="RdBu">RdBu</option>
+                        <option value="RdGy">RdGy</option>
+                        <option value="RdYlBu">RdYlBu</option>
+                        <option value="Spectral">Spectral</option>
+                        <option value="RdYlGn">RdYlGn</option>
+                        <option value="Accent">Accent</option>
+                        <option value="Dark2">Dark2</option>
+                        <option value="Paired">Paired</option>
+                        <option value="Pastel1">Pastel1</option>
+                        <option value="Pastel2">Pastel2</option>
+                        <option value="Set1">Set1</option>
+                        <option value="Set2">Set2</option>
+                        <option value="Set3">Set3</option>
+                    </select>
+                </div>
+                <div class="checkbox">
+                    <label><input type="checkbox" name="fill_null"> Fill Null</label>
+                </div>
+                <div class="checkbox">
+                    <label><input type="checkbox" name="smooth_horizontal"> Smooth Horizontal</label>
+                </div>
+                <div class="checkbox">
+                    <label><input type="checkbox" name="smooth_vertical"> Smooth Vertical</label>
+                </div>
+                <div class="form-group">
+                    <label for="similarity">Similarity</label><br />
+                    <input name="similarity" id="similarity" type="range"
+                           min="0" value="0" max="1" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="recursion">Recursion</label><br />
+                    <input name="recursion" id="recursion" type="range"
+                           min="0" value="0" max="20" step="1">
+                </div>
+            </form>
+        </div>
+        <div class="col-sm-8">
+            <img src="http://dummyimage.com/800x600/4d494d/686a82.gif&text=placeholder+image" alt="placeholder+image">
+        </div>
+    </div>
+</div>
 {% endblock %}
