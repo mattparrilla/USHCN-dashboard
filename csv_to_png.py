@@ -11,12 +11,6 @@ rainbow = ['000000', 'ff0000', 'ff8800', 'ffff00', '88ff00', '00ff00', '0000ff',
 
 
 def make_image():
-    palettes = {
-        'black_white': ['000000', 'ffffff'],
-        'paired': colorbrewer['Paired'],
-        'red': colorbrewer['YlOrRd']
-    }
-
     f_n = "btv"
     csv_f = "data/%s.csv" % f_n
     unit = 'day'
@@ -33,7 +27,7 @@ def make_image():
 
     array = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
         smooth_vertical, recursion, start_idx)
-    img = array_to_image(array, palettes[palette][bins], similarity, dimensions)
+    img = array_to_image(array, colorbrewer[palette][bins], similarity, dimensions)
     if save_image:
         img.save('img/%s-%s-%s-%s%s%s-%s.png' % (f_n, palette, fill_null,
             recursion, 'x' if smooth_horizontal else '',
