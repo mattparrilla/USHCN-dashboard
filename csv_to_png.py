@@ -10,25 +10,18 @@ with open('colorbrewer.json', 'rU') as f:
 rainbow = ['000000', 'ff0000', 'ff8800', 'ffff00', '88ff00', '00ff00', '0000ff', '8800ff', 'ff00ff']
 
 
-def make_image():
+def make_image(f_n='btv', fill_null=True,
+               unit='day', smooth_horizontal=False, smooth_vertical=False,
+               palette='paired', bins='4', dimensions=(2, 2), similarity=1,
+               recursion=0, start_idx=False, save_image=False):
+
     palettes = {
         'black_white': ['000000', 'ffffff'],
         'paired': colorbrewer['Paired'],
         'red': colorbrewer['YlOrRd']
     }
 
-    f_n = "btv"
     csv_f = "data/%s.csv" % f_n
-    unit = 'day'
-    fill_null = True  # 'fillNull'
-    smooth_horizontal = False
-    smooth_vertical = False
-    palette = 'paired'
-    bins = '4'
-    dimensions = (4, 4)
-    similarity = 0.5
-    recursion = 2
-    start_idx = False  # July 1 is 182
     save_image = False
 
     array = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
@@ -64,7 +57,6 @@ def array_to_image(array, palette, similarity, dimensions):
             color = map_colors(temp, rgb, bin_width, minimum, similarity)
             pixels[i, j] = color
 
-    img.show()
     return img
 
 
