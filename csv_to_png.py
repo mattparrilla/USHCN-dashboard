@@ -7,16 +7,14 @@ import json
 with open('colorbrewer.json', 'rU') as f:
     colorbrewer = json.load(f)
 
-rainbow = ['000000', 'ff0000', 'ff8800', 'ffff00', '88ff00', '00ff00', '0000ff', '8800ff', 'ff00ff']
-
 
 def make_image(f_n='btv', fill_null=True,
                unit='day', smooth_horizontal=False, smooth_vertical=False,
-               palette='Set1', bins='8', x_d=2, y_d=4, continuity=1,
+               palette='Set1', bins='3', x_d=2, y_d=4, continuity=0,
                recursion=0, start_idx=False, save_image=False):
 
-    """This function generates the image, which is then passed to the view as
-    a string. All image parameters are defined here."""
+    """This function generates an image from a matrix, which is then passed to
+    the view as a string. All image parameters are defined here."""
 
     csv_f = "data/%s.csv" % f_n  # The path to the data
 
@@ -41,55 +39,86 @@ def make_image(f_n='btv', fill_null=True,
 
 
 def matrix_to_image(matrix, palette, continuity, dimensions):
-    """Take a dict of matrixs and map it to an image"""
+    """Takes a matrix and uses it to generate an image. Each entry in the
+    matrix is assigned a region of defined dimensions and its color is
+    determined by palette and continuity.
 
-    width, height = len(matrix[0]), len(matrix)
+    dimensions: a tuple that defines the size of each data point (i.e. (2, 4)
+    means each data point will be 2px wide and 4px tall in the final image.
+
+    palette: an array of hex colors (i.e. ['000000', 'ffffff']).
+    The length of the array determines the number of bins (n - 1). Entries are
+    split into bins and then assigned a color from the palette.
+
+    continuity: a float between 0 and 1.
+    This number determines just how continuous the palette looks. If 1, the
+    palette is perfectly continuous and a data point 50% between bin thresholds
+    will get a color 50% between them. If the factor is 0, the palette is
+    perfectly discrete and a point 50% between bin thresholds will be set to
+    the lower threshold. If the factor is 0.4 a point 50% between bin
+    thresholds will only be scaled continuously, but on only 40% (0.4) of the
+    difference between the two colors, therefor it would be only 20% of the way
+    from the lower threshold.
+    """
+
+    # Get matrix attributes
+    width = dimensions[0] * len(matrix[0])
+    height = dimensions[1] * len(matrix)
     maximum, minimum = find_max_min(matrix)
 
-    img = Image.new('RGB',
-        ((dimensions[0] * width), (dimensions[1] * height)), (0, 0, 0))
+    img = Image.new('RGB', (width, height), (0, 0, 0))
     pixels = img.load()
 
     # define colors, bin size outside of loop
-    rgb = [tuple(map(ord, color.decode('hex'))) for color in palette]
-    bin_width = (maximum - minimum) / (len(rgb) - 1)
+    rgb_palette = [tuple(map(ord, color.decode('hex'))) for color in palette]
+    bin_width = (maximum - minimum) / (len(rgb_palette) - 1)
 
     for i in range(img.size[0]):
         for j in range(img.size[1]):
             temp = matrix[(j / dimensions[1])][(i / dimensions[0])]
+
+            # TODO: figure out how to color null values or if we even should
+            # (maybe more useful to fill_null?)
+
             # if temp is False:
             #     pixels[i, j] = (255, 0, 0)
             # else:
-            color = map_colors(temp, rgb, bin_width, minimum, continuity)
+
+            color = map_colors(temp, rgb_palette, bin_width, minimum,
+                    continuity)
+
             pixels[i, j] = color
 
     return img
 
 
 def map_colors(value, rgb, bin_width, minimum, continuity):
-    """Takes an matrix of colors and maps a value to a color. Values are
-    assigned to a bin with a base color, then, based on continuity (which
-    has a value of 0-1 and essentially determines how continuous/discrete to
-    make the output) and a value's distance from the bin threshold, it is
-    assigned a final color"""
+    """Maps a value to a color based on the values position in the domain.
+    Given a value, a palette, bin width (and number of bins from length of
+    palette, the minimum value, and a continuity factor, determines the color
+    of the given value"""
 
+    # What bin is the value in, and where does it fall within the bin's domain?
     bin_idx = int((value - minimum) // bin_width)
     bin_position = ((value - minimum) % bin_width) / bin_width
 
+    # What is color of lower (r,g,b) and upper (nr,ng,nb) thresholds?
     r, g, b = rgb[bin_idx]
     nr, ng, nb = safe_list_get(rgb, bin_idx + 1, (255, 255, 255))
 
+    # Scale color along spectrum between two thresholds in prop. to continuity
+    # bin position gives distance from lower threshold value
+    # (continuity * (nr - r)) limits the palette to some percent of difference
     diff_r = bin_position * (continuity * (nr - r))
     diff_g = bin_position * (continuity * (ng - g))
     diff_b = bin_position * (continuity * (nb - b))
 
     color = (int(r + diff_r), int(g + diff_g), int(b + diff_b))
+
     return color
 
 
 def find_max_min(matrix):
-    """Takes an matrix of matrixs and finds the max and min values"""
-
     # start with arbitrary, but valid, first value
     maximum = matrix[0][0]
     minimum = matrix[0][0]
@@ -108,9 +137,12 @@ def find_max_min(matrix):
 def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
         recursion, start_idx=False):
     """Converts a USHCN csv into a matrix with each row a unique year and each
-    value a unique value"""
-    f = csv.reader(open(csv_f, 'rU'))
-    values = [l for l in f]
+    value a unique data point"""
+
+    with open(csv_f, 'rU') as csv_file:
+        f = csv.reader(csv_file)
+        values = [l for l in f]
+
     del values[:2]
 
     if unit is "day":
