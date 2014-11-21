@@ -4,16 +4,18 @@ from PIL import Image
 import csv
 import json
 
+#load all colorbrewer palettes
 with open('colorbrewer.json', 'rU') as f:
     colorbrewer = json.load(f)
 
-rainbow = ['000000', 'ff0000', 'ff8800', 'ffff00', '88ff00', '00ff00', '0000ff', '8800ff', 'ff00ff']
 
 
 def make_image(f_n='btv', fill_null=True,
                unit='day', smooth_horizontal=False, smooth_vertical=False,
                palette='Set1', bins='4', dimensions=(2, 2), similarity=1,
                recursion=0, start_idx=False, save_image=False):
+    """Takes all arguments and translates station data into a matrix, applies
+    various transformations, and generates an image for consumption"""
 
     csv_f = "data/%s.csv" % f_n
     save_image = False
@@ -29,7 +31,9 @@ def make_image(f_n='btv', fill_null=True,
 
 
 def array_to_image(array, palette, similarity, dimensions):
-    """Take a dict of arrays and map it to an image"""
+    """Takes an array of arrays (i.e. a matrix) and turns each entry into a
+    block of the given dimensions. Entries receive a color based on the
+    palette provided and the similarity parameter (see explanation below)"""
 
     width, height = len(array[0]), len(array)
     maximum, minimum = find_max_min(array)
@@ -230,5 +234,3 @@ def safe_list_get(l, idx, default, additional=-1):
             return l[idx]
     except IndexError:
         return default
-
-make_image()
