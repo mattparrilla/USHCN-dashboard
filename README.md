@@ -18,6 +18,22 @@ Coming Soon
 
 See project [issues](https://github.com/mattparrilla/csv2png/issues)
 
+##`make_gif()` Parameters
+`make_gif()` takes USHCN station data and turns it into an image.
+
+`f_n` - the name of the file containing the data (no extension)
+`fill_null` - *a boolean*, should null values be populated by averaging their neighbors?
+`unit` - 'day' or 'month'
+`smooth_horizontal` - *a boolean*, should each value be an average of it and its neighbors (from two days prior to two days after)?
+`smooth_vertical` - *a boolean*, should each value be an average of it and its neighbors (the same day from two years prior to two years after)?
+`palette` - a colorbrewer palette to use
+`bins` - the number of colors to use
+`x_d` - the x-dimension that each individual value will be represented in pixels
+`y_d` - the y-dimension that each individual value will be represented in pixels
+`continuity` - a float between 0 and 1.
+This number determines just how continuous the palette looks. If `1`, the palette is perfectly continuous and a data point 50% between bin thresholds will get a color 50% between them. If the factor is `0`, the palette is perfectly discrete and a point 50% between bin thresholds will be set to the lower threshold. If the factor is `0.4` a point 50% between bin thresholds will only be scaled continuously, but on only 40% (0.4) of the difference between the two colors, therefor it would be only 20% of the way from the lower threshold.
+`start_idx` - the day in the year that the image should begin at.
+i.e. if `0`, start at Jan 1. If `182` start at July 1, etc.
 ## Creators
 
 - Matt Parrilla

@@ -1,6 +1,7 @@
 #!/usr/local/bin/python
 
 from PIL import Image
+from collections import Counter
 import csv
 import json
 
@@ -10,18 +11,19 @@ with open('colorbrewer.json', 'rU') as f:
 
 
 def make_image(f_n='btv', fill_null=True,
-               unit='day', smooth_horizontal=False, smooth_vertical=False,
-               palette='Set1', bins='3', x_d=2, y_d=4, continuity=0,
-               recursion=0, start_idx=False, save_image=False):
-    """Takes all arguments and translates station data into a matrix, applies
-    various transformations, and generates an image for consumption"""
+               unit='day', smooth_horizontal=True, smooth_vertical=True,
+               palette='Set1', bins='8', x_d=2, y_d=4, continuity=0.2,
+               recursion=3, start_idx=False, save_image=False):
 
-    """This function generates an image from a matrix, which is then passed to
-    the view as a string. All image parameters are defined here."""
+    """Takes all arguments and translates station data into a matrix, applies
+    various transformations, and generates an image for consumption
+
+    See project README.md for a description of the arguments
+    """
 
     csv_f = "data/%s.csv" % f_n  # The path to the data
 
-    # Take data and convert it into a matrix
+    # Convert data to matrix
     matrix = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
              smooth_vertical, recursion, start_idx)
 
@@ -41,27 +43,72 @@ def make_image(f_n='btv', fill_null=True,
     return img, name
 
 
+def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
+        recursion, start_idx=False):
+    """Converts a USHCN csv into a matrix with each row a unique year and each
+    value a unique data point"""
+
+    with open(csv_f, 'rU') as csv_file:
+        f = csv.reader(csv_file)
+        values = [l for l in f]
+
+    # First two lines are labels
+    del values[:2]
+
+    # assign unit dependent parameters to be used in one place.
+    if unit is "day":
+        length = 366
+        unit_idx = 1
+        year_idx = 4
+    else:
+        length = 12
+        unit_idx = 2
+        year_idx = 1
+
+    years = []
+    for value in values:
+        if value[year_idx] not in years:
+            years.append(value[year_idx])
+
+    matrix = [[False] * length for year in years]
+
+    # Here's what we're using below:
+    # day[1] = index of day (1-366)
+    # day[4] = year
+    # day[5] = temperature
+
+    last_year = values[0][year_idx]  # define first year for comparison in loop
+    row_of_matrix = 0
+    for value in values:
+        if value[year_idx] != last_year:
+            last_year = value[year_idx]  # set new year
+            row_of_matrix += 1  # update row
+        try:
+            matrix[row_of_matrix][int(value[unit_idx]) - 1] = float(value[-1])
+        except:
+            pass
+
+    #del matrix[:20]
+    if start_idx:
+        matrix = shift_matrix(matrix, start_idx)
+
+    if fill_null:
+        matrix = smooth_nulls(matrix)
+
+    while recursion > 0:
+        if smooth_vertical:
+            matrix = five_day_averages(matrix, direction="vertical")
+        if smooth_horizontal:
+            matrix = five_day_averages(matrix)
+        recursion -= 1
+
+    return matrix
+
+
 def matrix_to_image(matrix, palette, continuity, dimensions):
     """Takes a matrix and uses it to generate an image. Each entry in the
     matrix is assigned a region of defined dimensions and its color is
     determined by palette and continuity.
-
-    dimensions: a tuple that defines the size of each data point (i.e. (2, 4)
-    means each data point will be 2px wide and 4px tall in the final image.
-
-    palette: an array of hex colors (i.e. ['000000', 'ffffff']).
-    The length of the array determines the number of bins (n - 1). Entries are
-    split into bins and then assigned a color from the palette.
-
-    continuity: a float between 0 and 1.
-    This number determines just how continuous the palette looks. If 1, the
-    palette is perfectly continuous and a data point 50% between bin thresholds
-    will get a color 50% between them. If the factor is 0, the palette is
-    perfectly discrete and a point 50% between bin thresholds will be set to
-    the lower threshold. If the factor is 0.4 a point 50% between bin
-    thresholds will only be scaled continuously, but on only 40% (0.4) of the
-    difference between the two colors, therefor it would be only 20% of the way
-    from the lower threshold.
     """
 
     # Get matrix attributes
@@ -121,94 +168,6 @@ def map_colors(value, rgb, bin_width, minimum, continuity):
     return color
 
 
-def find_max_min(matrix):
-    # start with arbitrary, but valid, first value
-    maximum = matrix[0][0]
-    minimum = matrix[0][0]
-
-    for i, row in enumerate(matrix):
-        for j, column in enumerate(row):
-            value = matrix[i][j]
-            if value > maximum:
-                maximum = value
-            elif value < minimum:
-                minimum = value
-
-    return maximum, minimum
-
-
-def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
-        recursion, start_idx=False):
-    """Converts a USHCN csv into a matrix with each row a unique year and each
-    value a unique data point"""
-
-    with open(csv_f, 'rU') as csv_file:
-        f = csv.reader(csv_file)
-        values = [l for l in f]
-
-    del values[:2]
-
-    if unit is "day":
-        length = 366
-        unit_idx = 1
-        year_idx = 4
-    else:
-        length = 12
-        unit_idx = 2
-        year_idx = 1
-
-    years = []
-    for value in values:
-        if value[year_idx] not in years:
-            years.append(value[year_idx])
-
-    matrix = [[False] * length for year in years]
-
-    # Here's what we're using below:
-    # day[1] = index of day (1-366)
-    # day[4] = year
-    # day[5] = temperature
-
-    last_year = values[0][year_idx]  # define first year for comparison in loop
-    row_of_matrix = 0
-    for value in values:
-        if value[year_idx] != last_year:
-            last_year = value[year_idx]  # set new year
-            row_of_matrix += 1  # update row
-        try:
-            matrix[row_of_matrix][int(value[unit_idx]) - 1] = float(value[-1])
-        except:
-            pass
-
-    #del matrix[:20]
-    if start_idx:
-        matrix = shift_matrix(matrix, start_idx)
-
-    if fill_null:
-        matrix = smooth_nulls(matrix)
-
-    while recursion > 0:
-        if smooth_vertical:
-            matrix = five_day_averages(matrix, direction="vertical")
-        if smooth_horizontal:
-            matrix = five_day_averages(matrix)
-        recursion -= 1
-
-    return matrix
-
-
-def shift_matrix(matrix, start_idx):
-    """Shifts an matrix so a particular index is now 0"""
-
-    dimensions = (len(matrix[0]), len(matrix))
-    new_matrix = [[False] * dimensions[0] for i in range(len(matrix))]
-    for i, row in enumerate(matrix):
-        for j, value in enumerate(row):
-            new_matrix[i][j - start_idx] = value
-
-    return new_matrix
-
-
 def smooth_nulls(matrix):
     """This function takes a matrix as an input. For any values that meet
     a condition, it averages the value at the same index in both the preceding
@@ -259,9 +218,12 @@ def five_day_averages(matrix, direction=False):
                              matrix[i][j],
                              safe_list_get(row, j + 1, False),
                              safe_list_get(row, j + 2, False)]
-                new_matrix[i][j] = sum(five_days) / 5
-
-                # TODO: Consider beginning and end of year
+                if j == 0 or j + 1 == len(row):
+                    new_matrix[i][j] = sum(five_days) / 3
+                elif j == 1 or j + 2 == len(row):
+                    new_matrix[i][j] = sum(five_days) / 4
+                else:
+                    new_matrix[i][j] = sum(five_days) / 5
 
     return new_matrix
 
@@ -277,3 +239,31 @@ def safe_list_get(l, idx, default, additional=-1):
             return l[idx]
     except IndexError:
         return default
+
+
+def find_max_min(matrix):
+    # start with arbitrary, but valid, first value
+    maximum = matrix[0][0]
+    minimum = matrix[0][0]
+
+    for i, row in enumerate(matrix):
+        for j, column in enumerate(row):
+            value = matrix[i][j]
+            if value > maximum:
+                maximum = value
+            elif value < minimum:
+                minimum = value
+
+    return maximum, minimum
+
+
+def shift_matrix(matrix, start_idx):
+    """Shifts an matrix so a particular index is now 0"""
+
+    dimensions = (len(matrix[0]), len(matrix))
+    new_matrix = [[False] * dimensions[0] for i in range(len(matrix))]
+    for i, row in enumerate(matrix):
+        for j, value in enumerate(row):
+            new_matrix[i][j - start_idx] = value
+
+    return new_matrix
