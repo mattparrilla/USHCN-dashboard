@@ -129,9 +129,8 @@ def matrix_to_image(matrix, palette, continuity, dimensions):
             # TODO: figure out how to color null values or if we even should
             # (maybe more useful to fill_null?)
 
-            # if temp is False:
-            #     pixels[i, j] = (255, 0, 0)
-            # else:
+            #if temp is False:
+            #    pixels[i, j] = (255, 0, 0)
 
             color = map_colors(temp, rgb_palette, bin_width, minimum,
                     continuity)
