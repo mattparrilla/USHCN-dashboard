@@ -1,7 +1,6 @@
 #!/usr/local/bin/python
 
 from PIL import Image
-from collections import Counter
 import csv
 import json
 
@@ -199,29 +198,72 @@ def five_day_averages(matrix, direction=False):
         new_matrix.append([False] * len(row))
         for j, item in enumerate(row):
             if direction is "vertical":
-                # Builds an matrix of the value on this date over the surrounding five years
+
+                # Gets the 2 elements above and 2 elements below the value
                 five_days = [safe_list_get(matrix, i - 2, False, j),
                              safe_list_get(matrix, i - 1, False, j),
                              matrix[i][j],
                              safe_list_get(matrix, i + 1, False, j),
                              safe_list_get(matrix, i + 2, False, j)]
+
+                # Average the result
+                # if the first or last year, will only return 3 values
                 if i == 0 or i + 1 == len(matrix):
                     new_matrix[i][j] = sum(five_days) / 3
+                # if the 2nd or 2nd to last year, will only return 4 values
                 elif i == 1 or i + 2 == len(matrix):
                     new_matrix[i][j] = sum(five_days) / 4
                 else:
                     new_matrix[i][j] = sum(five_days) / 5
             else:
-                # Builds an matrix of the value on this surrounding five days
+                # Gets the 2 elements to before and the 2 elements after value
                 five_days = [safe_list_get(row, j - 2, False),
                              safe_list_get(row, j - 1, False),
                              matrix[i][j],
                              safe_list_get(row, j + 1, False),
                              safe_list_get(row, j + 2, False)]
-                if j == 0 or j + 1 == len(row):
-                    new_matrix[i][j] = sum(five_days) / 3
-                elif j == 1 or j + 2 == len(row):
-                    new_matrix[i][j] = sum(five_days) / 4
+
+                # If first day of year, get values from end of previous year
+                if j == 0:
+                    if i > 0:
+                        if matrix[i - 1][-1]:  # True if leap year
+                            five_days.append(matrix[i - 1][-1])
+                            five_days.append(matrix[i - 1][-2])
+                        else:
+                            five_days.append(matrix[i - 1][-2])
+                            five_days.append(matrix[i - 1][-3])
+                        new_matrix[i][j] = sum(five_days) / 5
+
+                    else:  # if first year in dataset
+                        new_matrix[i][j] = sum(five_days) / 3
+
+                # If last day of year, get values from beginning of next year
+                elif j + 1 == len(row):
+                    if i + 1 == len(matrix):  # if last year in dataset
+                        new_matrix[i][j] = sum(five_days) / 3
+                    else:
+                        five_days.append(matrix[i + 1][0])
+                        five_days.append(matrix[i + 1][1])
+                        new_matrix[i][j] = sum(five_days) / 5
+
+                # If 2nd day in year
+                elif j == 1:
+                    if i > 0:
+                        if matrix[i - 1][-1]:
+                            five_days.append(matrix[i - 1][-1])
+                        else:
+                            five_days.append(matrix[i - 1][-2])
+                        new_matrix[i][j] = sum(five_days) / 5
+                    else:
+                        new_matrix[i][j] = sum(five_days) / 4
+
+                # If 2nd to last day in year
+                elif j + 2 == len(row):
+                    if i + 1 == len(matrix):  # if last year in dataset
+                        new_matrix[i][j] = sum(five_days) / 4
+                    else:
+                        five_days.append(matrix[i + 1][0])
+                        new_matrix[i][j] = sum(five_days) / 5
                 else:
                     new_matrix[i][j] = sum(five_days) / 5
 
