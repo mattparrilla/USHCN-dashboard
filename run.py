@@ -52,7 +52,7 @@ image_args = {
 @use_args(image_args)
 def get_image(args):
 
-    image, name = make_image(args)
+    image, name = make_image(**args)
     pprint(args)
     print name
     return serve_pil_image(image)
