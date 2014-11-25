@@ -32,6 +32,8 @@
                     var data = $(this).serialize(),
                         src = '/img/?' + data;
 
+                    console.log(data);
+
                     img.attr('src', src);
                 }).change();
             });

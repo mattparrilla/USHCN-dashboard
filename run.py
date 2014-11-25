@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_file
+from flask import Flask, render_template, send_file, make_response
 from webargs import Arg
 from webargs.flaskparser import use_args
 from csv_to_png import make_image
@@ -25,27 +25,20 @@ def index():
         palettes=palettes)
 
 
-def serve_pil_image(pil_img):
-    img_io = StringIO()
-    pil_img.save(img_io, 'PNG')
-    img_io.seek(0)
-    return send_file(img_io, mimetype='image/png')
-
-
 image_args = {
     'f_n': Arg(str, default='btv'),
     'fill_null': Arg(bool, default=True),
     'unit': Arg(str, default='day'),
-    'smooth_horizontal': Arg(bool, default=True),
-    'smooth_vertical': Arg(bool, default=True),
+    'smooth_horizontal': Arg(bool, use=lambda n: n == 'on'),
+    'smooth_vertical': Arg(bool, use=lambda n: n == 'on'),
     'palette': Arg(str, default='Set1'),
     'bins': Arg(str, default='8'),
     'x_d': Arg(int, default=2),
-    'y_d': Arg(int, default=4),
+    'y_d': Arg(int, default=8),
     'continuity': Arg(float, default=0.2),
     'recursion': Arg(int, default=3),
     'start_idx': Arg(int, default=0),
-    'save_image': Arg(bool, default=False),
+    'save_image': Arg(bool),
 }
 
 
@@ -54,9 +47,16 @@ image_args = {
 def get_image(args):
 
     image, name = make_image(**args)
-    pprint(args)
-    print name
-    return serve_pil_image(image)
+    img_io = StringIO()
+    image.save(img_io, 'PNG')
+    img_io.seek(0)
+
+    if args['save_image']:
+        response = make_response(img_io.getvalue())
+        response.headers["Content-Disposition"] = "attachment; filename=%s" % name
+        return response
+    else:
+        return send_file(img_io, mimetype='image/png')
 
 if __name__ == '__main__':
     app.run(debug=True)

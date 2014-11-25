@@ -13,7 +13,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="exampleInputFile">File input</label><br />
+                    <label for="exampleInputFile">Palette</label><br />
                     <select name="palette">
                         {% for palette in palettes %}
                         <option value="{{ palette }}">{{ palette }}</option>
@@ -21,13 +21,13 @@
                     </select>
                 </div>
                 <div class="checkbox">
-                    <label><input type="checkbox" name="fill_null"> Fill Null</label>
+                    <label><input type="checkbox" name="fill_null" checked> Fill Null</label>
                 </div>
                 <div class="checkbox">
-                    <label><input type="checkbox" name="smooth_horizontal"> Smooth Horizontal</label>
+                    <label><input type="checkbox" name="smooth_horizontal" checked> Smooth Horizontal</label>
                 </div>
                 <div class="checkbox">
-                    <label><input type="checkbox" name="smooth_vertical"> Smooth Vertical</label>
+                    <label><input type="checkbox" name="smooth_vertical" checked> Smooth Vertical</label>
                 </div>
                 <div class="form-group">
                     <label for="similarity">Similarity</label><br />
@@ -37,7 +37,7 @@
                 <div class="form-group">
                     <label for="recursion">Recursion</label><br />
                     <input name="recursion" id="recursion" type="range"
-                           min="0" value="0" max="20" step="1">
+                           min="0" value="0" max="10" step="1">
                 </div>
             </form>
         </div>
