@@ -55,7 +55,7 @@ def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
     del values[:2]
 
     # assign unit dependent parameters to be used in one place.
-    if unit is "day":
+    if unit == "day":
         length = 366
         unit_idx = 1
         year_idx = 4

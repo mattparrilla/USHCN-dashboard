@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, send_file
 from webargs import Arg
 from webargs.flaskparser import use_args
 from csv_to_png import make_image
@@ -44,9 +44,10 @@ image_args = {
     'y_d': Arg(int, default=4),
     'continuity': Arg(float, default=0.2),
     'recursion': Arg(int, default=3),
-    'start_idx': Arg(bool, default=False),
+    'start_idx': Arg(int, default=0),
     'save_image': Arg(bool, default=False),
 }
+
 
 @app.route('/img/')
 @use_args(image_args)
