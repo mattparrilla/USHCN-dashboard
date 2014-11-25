@@ -23,16 +23,34 @@
         {% block content %}{% endblock %}
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/localforage/1.1.1/localforage.min.js"></script>
         <script>
             $(document).ready(function () {
                 var form = $('form').first(),
                     img = $('img').first();
 
+                // Check for saved state
+                localforage.getItem('form_data', function(err, value) {
+                    $.each(value, function (k, v) {
+                        var input = form.find('[name="'+v.name+'"]');
+
+                        if (v.value === 'on') {
+                            input.prop('checked', true);
+                        } else {
+                            input.val(v.value);
+                        }
+                    })
+
+                    // Trigger an image update
+                    form.change();
+                });
+
                 form.change(function () {
                     var data = $(this).serialize(),
+                        data_array = $(this).serializeArray(),
                         src = '/img/?' + data;
 
-                    console.log(data);
+                    localforage.setItem('form_data', data_array);
 
                     img.attr('src', src);
                 }).change();
