@@ -4,15 +4,11 @@ from PIL import Image
 import csv
 import json
 
-#load all colorbrewer palettes
-with open('colorbrewer.json', 'rU') as f:
-    colorbrewer = json.load(f)
 
-
-def make_image(f_n='btv', fill_null=True,
-               unit='day', smooth_horizontal=True, smooth_vertical=True,
-               palette='Set1', bins='8', x_d=2, y_d=4, continuity=0.2,
-               recursion=3, start_idx=False, save_image=False):
+def make_image(filename='btv', fill_null=True,
+               smooth_horizontal=True, smooth_vertical=True,
+               palette='Set1', bins='8', data_width=2, data_height=4,
+               continuity=0.2, recursion=3, start_idx=False, save_image=False):
 
     """Takes all arguments and translates station data into a matrix, applies
     various transformations, and generates an image for consumption
@@ -20,21 +16,24 @@ def make_image(f_n='btv', fill_null=True,
     See project README.md for a description of the arguments
     """
 
-    csv_f = "data/%s.csv" % f_n  # The path to the data
+    csv_filename = "data/%s.csv" % filename  # The path to the data
 
     # Convert data to matrix
-    matrix = csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal,
+    matrix = csv_to_matrix(csv_filename, fill_null, smooth_horizontal,
              smooth_vertical, recursion, start_idx)
 
-    # Transform matrix into image
-    dimensions = (int(x_d), int(y_d))  # each entry's pixel dimensions
-    img = matrix_to_image(matrix, colorbrewer[palette][bins],
-          continuity, dimensions)
+    # The dimensions of each value in the final image
+    dimensions = (int(data_width), int(data_height))
+
+    with open('colorbrewer.json', 'rU') as f:
+        colorbrewer = json.load(f)
+        img = matrix_to_image(matrix, colorbrewer[palette][bins],
+            continuity, dimensions)
 
     # TODO: use this to suggest the default filename when downloading file
     # also: improve the name, make it more useful
     continuity = str(continuity).replace('.', '_')
-    name = '%s-%s-%s-%sx%s%s-%s.png' % (f_n, palette, continuity, recursion,
+    name = '%s-%s-%s-%sx%s%s-%s.png' % (filename, palette, continuity, recursion,
            'no_null' if fill_null else 'null',
            'x' if not smooth_horizontal else '',
            'y' if not smooth_vertical else '')
@@ -42,32 +41,26 @@ def make_image(f_n='btv', fill_null=True,
     return img, name
 
 
-def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
-        recursion, start_idx=False):
+def csv_to_matrix(csv_filename, fill_null, smooth_horizontal, smooth_vertical,
+        recursion, start_idx=0):
     """Converts a USHCN csv into a matrix with each row a unique year and each
     value a unique data point"""
 
-    with open(csv_f, 'rU') as csv_file:
-        f = csv.reader(csv_file)
-        values = [l for l in f]
+    with open(csv_filename, 'rU') as csv_f:
+        f = csv.reader(csv_f)
+        values = [l for l in f][2:]
 
-    # First two lines are labels
-    del values[:2]
-
-    # assign unit dependent parameters to be used in one place.
-    if unit == "day":
-        length = 366
-        unit_idx = 1
-        year_idx = 4
-    else:
-        length = 12
-        unit_idx = 2
-        year_idx = 1
+    length = 366
+    unit_idx = 1
+    year_idx = 4
 
     years = []
-    for value in values:
+    for value in values:  # first two lines are labels
         if value[year_idx] not in years:
             years.append(value[year_idx])
+
+    # inner list will be 366 times too big, then cut down by set()
+    # years = set([value[year_idx] for value in values[2:]])
 
     matrix = [[False] * length for year in years]
 
@@ -84,10 +77,14 @@ def csv_to_matrix(csv_f, unit, fill_null, smooth_horizontal, smooth_vertical,
             row_of_matrix += 1  # update row
         try:
             matrix[row_of_matrix][int(value[unit_idx]) - 1] = float(value[-1])
+        #except IndexError:
+            # do stuff, or not
+        #except TypeError:
+        #except (IndexError, TypeError):
+        #When excepting, explain why, what error trying to catch
         except:
             pass
 
-    #del matrix[:20]
     if start_idx:
         matrix = shift_matrix(matrix, start_idx)
 
@@ -143,7 +140,7 @@ def matrix_to_image(matrix, palette, continuity, dimensions):
 def map_colors(value, rgb, bin_width, minimum, continuity):
     """Maps a value to a color based on the values position in the domain.
     Given a value, a palette, bin width (and number of bins from length of
-    palette, the minimum value, and a continuity factor, determines the color
+    palette), the minimum value, and a continuity factor, determines the color
     of the given value"""
 
     # What bin is the value in, and where does it fall within the bin's domain?
@@ -154,8 +151,8 @@ def map_colors(value, rgb, bin_width, minimum, continuity):
     r, g, b = rgb[bin_idx]
     nr, ng, nb = safe_list_get(rgb, bin_idx + 1, (255, 255, 255))
 
-    # Scale color along spectrum between two thresholds in prop. to continuity
-    # bin position gives distance from lower threshold value
+    # Scale color along spectrum between two thresholds in proportion to
+    # continuity bin position gives distance from lower threshold value
     # (continuity * (nr - r)) limits the palette to some percent of difference
     diff_r = bin_position * (continuity * (nr - r))
     diff_g = bin_position * (continuity * (ng - g))
@@ -173,17 +170,15 @@ def smooth_nulls(matrix):
 
     for i, year in enumerate(matrix):
         for j, day in enumerate(year):
-            if day is False:  # FIX: ideally this will be False, not zero
-                try:
+            if day is False:
+                if i == 0:
+                    matrix[i][j] = matrix[i + 1][j]
+                elif i + 1 == len(matrix):
+                    matrix[i][j] = matrix[i - 1][j]
+                else:
                     year_before = matrix[i - 1][j]
                     year_after = matrix[i + 1][j]
                     matrix[i][j] = (year_before + year_after) / 2
-                except IndexError:
-                    # this will throw IndexError on first and last year
-                    if i == 0:
-                        matrix[i][j] = matrix[i + 1][j]
-                    elif i > 0:
-                        matrix[i][j] = matrix[i - 1][j]
 
     return matrix
 
@@ -191,12 +186,14 @@ def smooth_nulls(matrix):
 def five_day_averages(matrix, direction=False):
     """Takes a matrix and creates a copy of the same dimensions of the
     running average of the values for a five day period."""
+    # For horizontal case, consider a 1d array instead of matrix. Borderline
+    # call maybe?
 
     new_matrix = []
     for i, row in enumerate(matrix):
         new_matrix.append([False] * len(row))
         for j, item in enumerate(row):
-            if direction is "vertical":
+            if direction == "vertical":
 
                 # Gets the 2 elements above and 2 elements below the value
                 five_days = [safe_list_get(matrix, i - 2, False, j),
@@ -205,15 +202,9 @@ def five_day_averages(matrix, direction=False):
                              safe_list_get(matrix, i + 1, False, j),
                              safe_list_get(matrix, i + 2, False, j)]
 
-                # Average the result
-                # if the first or last year, will only return 3 values
-                if i == 0 or i + 1 == len(matrix):
-                    new_matrix[i][j] = sum(five_days) / 3
-                # if the 2nd or 2nd to last year, will only return 4 values
-                elif i == 1 or i + 2 == len(matrix):
-                    new_matrix[i][j] = sum(five_days) / 4
-                else:
-                    new_matrix[i][j] = sum(five_days) / 5
+                false_count = sum([1 for v in five_days if v is False])
+                # TODO: comment
+                new_matrix[i][j] = sum(five_days) / (5 - false_count)
             else:
                 # Gets the 2 elements to before and the 2 elements after value
                 five_days = [safe_list_get(row, j - 2, False),
@@ -269,15 +260,12 @@ def five_day_averages(matrix, direction=False):
     return new_matrix
 
 
-def safe_list_get(l, idx, default, additional=-1):
+def safe_list_get(matrix, idx, default, second_dimension_idx=None):
     try:
-        if idx < 0:
-            return default
-
-        if additional >= 0:
-            return l[idx][int(additional)]
+        if second_dimension_idx is not None:
+            return matrix[idx][second_dimension_idx]
         else:
-            return l[idx]
+            return matrix[idx]
     except IndexError:
         return default
 
@@ -301,8 +289,7 @@ def find_max_min(matrix):
 def shift_matrix(matrix, start_idx):
     """Shifts an matrix so a particular index is now 0"""
 
-    dimensions = (len(matrix[0]), len(matrix))
-    new_matrix = [[False] * dimensions[0] for i in range(len(matrix))]
+    new_matrix = [[False] * len(matrix[0]) for i in range(len(matrix))]
     for i, row in enumerate(matrix):
         for j, value in enumerate(row):
             new_matrix[i][j - start_idx] = value
