@@ -16,14 +16,14 @@ def make_image(filename='btv', fill_null=True,
     See project README.md for a description of the arguments
     """
 
-    csv_filename = "data/%s.csv" % filename  # The path to the data
+    csv_filename = "main/static/data/%s.csv" % filename  # The path to the data
 
     # Convert data to matrix
     matrix = csv_to_matrix(csv_filename, fill_null, smooth_horizontal,
              smooth_vertical, recursion, start_index)
 
     # Load colorbrewer palettes from JSON, generate image
-    with open('colorbrewer.json', 'rU') as f:
+    with open('main/static/colorbrewer.json', 'rU') as f:
         colorbrewer = json.load(f)
         img = matrix_to_image(matrix, colorbrewer[palette][bins],
             continuity, data_width, data_height)
