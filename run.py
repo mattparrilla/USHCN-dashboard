@@ -5,7 +5,6 @@ from csv_to_png import make_image
 from cStringIO import StringIO
 import json
 
-from pprint import pprint
 
 app = Flask(__name__)
 
@@ -26,18 +25,17 @@ def index():
 
 
 image_args = {
-    'f_n': Arg(str, default='btv'),
+    'filename': Arg(str, default='btv'),
     'fill_null': Arg(bool, default=True),
-    'unit': Arg(str, default='day'),
     'smooth_horizontal': Arg(bool, use=lambda n: n == 'on'),
     'smooth_vertical': Arg(bool, use=lambda n: n == 'on'),
     'palette': Arg(str, default='Set1'),
     'bins': Arg(str, default='8'),
-    'x_d': Arg(int, default=2),
-    'y_d': Arg(int, default=8),
+    'data_width': Arg(int, default=2),
+    'data_height': Arg(int, default=4),
     'continuity': Arg(float, default=0.2),
     'recursion': Arg(int, default=3),
-    'start_idx': Arg(int, default=0),
+    'start_index': Arg(int, default=0),
     'save_image': Arg(bool),
 }
 
