@@ -12,7 +12,7 @@ For this particular image, the data has been smoothed and the color palette is a
 
 ##Demo
 
-Coming Soon
+We now have a [prototype](http://mattparrilla.webfactional.com) populated with precipitation, snow depth, and mean daily temperature in Burlington, Vermont.
 
 ##To Do
 
