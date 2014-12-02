@@ -4,6 +4,7 @@ from webargs import Arg
 from webargs.flaskparser import use_args
 from csv_to_png import make_image
 from cStringIO import StringIO
+from main import ABSOLUTE_PATH
 import json
 
 
@@ -12,7 +13,7 @@ def index():
     title = "USHCN Data Mapping"
     description = "Taking USHCN data and trying to tell a story with it"
 
-    with open('main/static/colorbrewer.json', 'rU') as f:
+    with open('%s/static/colorbrewer.json' % ABSOLUTE_PATH, 'rU') as f:
         colorbrewer = json.load(f)
         palettes = sorted(colorbrewer.keys())
 

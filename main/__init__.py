@@ -1,5 +1,8 @@
 import os
-import sys
+import inspect
+
+ABSOLUTE_PATH = os.path.dirname(os.path.abspath(inspect.getfile(
+    inspect.currentframe())))
 
 from flask import Flask
 
