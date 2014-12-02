@@ -39,7 +39,7 @@ image_args = {
 }
 
 
-@app.route('/img/')
+@app.route('/img')
 @use_args(image_args)
 def get_image(args):
 

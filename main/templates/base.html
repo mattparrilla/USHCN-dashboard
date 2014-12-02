@@ -48,7 +48,7 @@
                 form.change(function () {
                     var data = $(this).serialize(),
                         data_array = $(this).serializeArray(),
-                        src = '/img/?' + data;
+                        src = '/img?' + data;
 
                     localforage.setItem('form_data', data_array);
 
