@@ -24,7 +24,7 @@ def index():
 
 
 image_args = {
-    'filename': Arg(str, default='btv'),
+    'filename': Arg(str, default='btv-mean-temp'),
     'fill_null': Arg(bool, default=True),
     'smooth_horizontal': Arg(bool, use=lambda n: n == 'on'),
     'smooth_vertical': Arg(bool, use=lambda n: n == 'on'),
