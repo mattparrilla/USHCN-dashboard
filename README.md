@@ -35,6 +35,19 @@ This number determines just how continuous the palette looks. If `1`, the palett
 - `start_idx` - the day in the year that the image should begin at.
 i.e. if `0`, start at Jan 1. If `182` start at July 1, etc.
 
+## To Get Project Running
+
+1. Clone project from GitHub
+2. Install requirements (set up venv)
+3. Migrate database
+        python manage.py migrate
+4. Load fixtures
+        python manage.py loaddate states.json
+5. Create superuser
+        python manage.py createsuperuser
+6. Import stations
+        python manage.py imporstations
+
 ## Creators
 
 - Matt Parrilla
