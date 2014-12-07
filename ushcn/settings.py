@@ -90,4 +90,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = '/Users/joeydi/Sites/ushcn/media/'
+MEDIA_ROOT = './media/'
