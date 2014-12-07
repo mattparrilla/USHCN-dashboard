@@ -46,7 +46,7 @@ i.e. if `0`, start at Jan 1. If `182` start at July 1, etc.
 5. Create superuser
         python manage.py createsuperuser
 6. Import stations
-        python manage.py imporstations
+        python manage.py importstations
 
 ## Creators
 
