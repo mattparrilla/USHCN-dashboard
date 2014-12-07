@@ -46,6 +46,8 @@ class State(models.Model):
 
         ObservationManager().import_from_file(self.data_file)
 
+    def __str__(self):
+        return self.name
 
 
 class StationManager(models.Manager):
