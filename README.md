@@ -12,17 +12,16 @@ For this particular image, the data has been smoothed and the color palette is a
 
 ##Demo
 
-<<<<<<< Updated upstream
-We now have a [prototype](http://mattparrilla.webfactional.com) populated with precipitation, snow depth, and mean daily temperature in Burlington, Vermont.
-=======
 http://mattparrilla.webfactional.com
->>>>>>> Stashed changes
 
 ##To Do
 
 See project [issues](https://github.com/mattparrilla/csv2png/issues)
 
 ##`make_image()` Parameters
+
+DISCLAIMER: These are no longer completely accurate. In the process of updating.
+
 `make_image()` takes USHCN station data and turns it into an image.
 
 - `f_n` - the name of the file containing the data (no extension)
