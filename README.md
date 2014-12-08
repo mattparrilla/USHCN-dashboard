@@ -5,14 +5,14 @@ A tool that creates images out of USHCN station data.
 **Example:** Daily Mean Temperature in Burlington, VT Since 1940
 
 ![Daily Mean Temperature in BTV]
-(http://i.imgur.com/6GlZviT.png)
+(http://i.imgur.com/G7Whq9W.png)
 This image shows the daily mean temperature in Burlington Vermont over the last 73 years. The top left of the image is January 1, 1940 and the bottom right is December 31, 2013. The days of the year progress from left to right and the years progress from top to bottom.
 
 For this particular image, the data has been smoothed and the color palette is a qualitative colorbrewer palette.
 
 ##Demo
 
-Coming Soon
+http://mattparrilla.webfactional.com
 
 ##To Do
 
@@ -34,34 +34,6 @@ See project [issues](https://github.com/mattparrilla/csv2png/issues)
 This number determines just how continuous the palette looks. If `1`, the palette is perfectly continuous and a data point 50% between bin thresholds will get a color 50% between them. If the factor is `0`, the palette is perfectly discrete and a point 50% between bin thresholds will be set to the lower threshold. If the factor is `0.4` a point 50% between bin thresholds will only be scaled continuously, but on only 40% (0.4) of the difference between the two colors, therefor it would be only 20% of the way from the lower threshold.
 - `start_idx` - the day in the year that the image should begin at.
 i.e. if `0`, start at Jan 1. If `182` start at July 1, etc.
-
-## To Get Project Running
-
-1. Clone project from GitHub
-
-        git clone git@github.com/mattparrilla/USHCN-dashboard.git
-
-2. Install requirements (set up venv)
-
-        cd USHCN-dashboard
-        virtualenv venv
-        pip install -r requirements.txt
-
-3. Migrate database
-
-        python manage.py migrate
-
-4. Load fixtures
-
-        python manage.py loaddate states.json
-
-5. Create superuser
-
-        python manage.py createsuperuser
-
-6. Import stations
-
-        python manage.py importstations
 
 ## Creators
 
