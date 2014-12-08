@@ -10,6 +10,34 @@ This image shows the daily mean temperature in Burlington Vermont over the last 
 
 For this particular image, the data has been smoothed and the color palette is a qualitative colorbrewer palette.
 
+## To Get Project Running
+
+1. Clone project from GitHub
+
+        git clone git@github.com/mattparrilla/USHCN-dashboard.git
+
+2. Install requirements (set up venv)
+
+        cd USHCN-dashboard
+        virtualenv venv
+        pip install -r requirements.txt
+
+3. Migrate database
+
+        python manage.py migrate
+
+4. Load fixtures
+
+        python manage.py loaddate states.json
+
+5. Create superuser
+
+        python manage.py createsuperuser
+
+6. Import stations
+
+        python manage.py importstations
+
 ##Demo
 
 http://mattparrilla.webfactional.com
@@ -19,6 +47,8 @@ http://mattparrilla.webfactional.com
 See project [issues](https://github.com/mattparrilla/csv2png/issues)
 
 ##`make_image()` Parameters
+These are no longer totally accurate. I'm rewriting this script and will update the parameter definitions once done. 12/7/14
+
 `make_image()` takes USHCN station data and turns it into an image.
 
 - `f_n` - the name of the file containing the data (no extension)
