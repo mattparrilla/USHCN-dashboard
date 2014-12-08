@@ -6,6 +6,7 @@ A tool that creates images out of USHCN station data.
 
 ![Daily Mean Temperature in BTV]
 (http://i.imgur.com/G7Whq9W.png)
+
 This image shows the daily mean temperature in Burlington Vermont over the last 73 years. The top left of the image is January 1, 1940 and the bottom right is December 31, 2013. The days of the year progress from left to right and the years progress from top to bottom.
 
 For this particular image, the data has been smoothed and the color palette is a qualitative colorbrewer palette.
