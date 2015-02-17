@@ -24,7 +24,7 @@
                     <label for="exampleInputFile">Palette</label><br />
                     <select name="palette">
                         {% for palette in palettes %}
-                        <option value="{{ palette }}">{{ palette }}</option>
+                        <option value="{{ palette }}" {% if palette =='RdYlBu' %}selected="selected"{% endif %}>{{ palette }}</option>
                         {% endfor %}
                     </select>
                 </div>
