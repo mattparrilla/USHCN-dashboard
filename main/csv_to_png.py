@@ -6,10 +6,10 @@ import csv
 import json
 
 
-def make_image(filename='btv', fill_null=True,
+def make_image(filename='btv-mean-temp', fill_null=True,
                smooth_horizontal=True, smooth_vertical=True,
-               palette='Set1', bins='8', data_width=2, data_height=4,
-               continuity=0.2, recursion=3, start_index=0, save_image=False):
+               palette='RdYlBu', bins='8', data_width=2, data_height=4,
+               continuity=0.4, recursion=2, start_index=0, save_image=False):
 
     """Take all arguments and translate station data into a matrix, apply
     various transformations, and generate an image for consumption
@@ -26,8 +26,20 @@ def make_image(filename='btv', fill_null=True,
     # Load colorbrewer palettes from JSON, generate image
     with open('%s/static/colorbrewer.json' % ABSOLUTE_PATH, 'rU') as f:
         colorbrewer = json.load(f)
-        img = matrix_to_image(matrix, colorbrewer[palette][bins],
-            continuity, data_width, data_height)
+        try:
+            img = matrix_to_image(matrix, colorbrewer[palette][bins][::-1],
+                continuity, data_width, data_height)
+
+        # Not all palettes have same number of bins
+        except KeyError:
+
+            bins = int(bins)
+            while str(bins) not in colorbrewer[palette]:
+                bins -= 1
+                img = matrix_to_image(matrix,
+                    colorbrewer[palette][str(bins)][::-1],
+                    continuity, data_width, data_height)
+
 
     # Generate a unique name for image
     continuity = str(continuity).replace('.', '_')

@@ -33,29 +33,48 @@
                     <input name="bins" id="bins" type="range"
                            min="3" value="8" max="10" step="1">
                 </div>
-                <div class="checkbox">
-                    <label><input type="checkbox" name="fill_null" checked> Fill Null</label>
-                </div>
-                <div class="checkbox">
-                    <label><input type="checkbox" name="smooth_horizontal" checked> Smooth Horizontal</label>
-                </div>
-                <div class="checkbox">
-                    <label><input type="checkbox" name="smooth_vertical" checked> Smooth Vertical</label>
-                </div>
                 <div class="form-group">
                     <label for="continuity">Continuity</label><br />
                     <input name="continuity" id="continuity" type="range"
                            min="0" value="0.5" max="1" step="0.25">
                 </div>
                 <div class="form-group">
-                    <label for="recursion">Recursion</label><br />
+                    <label for="recursion">Smooting Factor</label><br />
                     <input name="recursion" id="recursion" type="range"
-                           min="0" value="2" max="10" step="1">
+                           min="0" value="2" max="3" step="1">
                 </div>
             </form>
         </div>
         <div class="col-sm-8">
             <img src="http://dummyimage.com/1x1/4d494d/686a82.gif" alt="">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-4">
+            <h2>About These Settings</h2>
+            <p>The above settings allow us to experiment with finding the parameters that best illustrate the changes that we are trying to reveal.</p>
+            <h4>Data Type</h4>
+            <p>The metric plotted in the corresponding image.</p>
+            <h4>Palette</h4>
+            <p>Determines the <a href="http://colorbrewer2.org" alt="Colorbrewer: Color Advice For Maps">Colorbrewer</a> palette to use.</p>
+            <h4>Bins</h4>
+            <p>The number of bins to divide the data domain into.</p>
+            <h4>Continuity</h4>
+            <p>The width of each color bin. Zero continuity would create discrete bins where any data point falling within a threshold would get assigned a specific color. Full continuity would assign each data value a unique color along a spectrum between bounding bins. Partial continuity restricts the spectrum to a percentage of the difference between the bins.</p>
+            <p>Somewhat discrete bins are useful in identifying changes as fully continuous bins, while cool looking, are just blurry.</p>
+            <h4>Smoothing Factor</h4>
+            <p>A vertical and horizontal smoothing applied to the data. A smoothing factor of 1 takes a five day average along the x-axis (so averaging against neighboring days in the same calendar year) and in the y-axis (averaging against the same calendar day in the 2 years before and 2 years after).</p>
+            <p>This is useful for reducing the noise in daily climate data, but <strong>the greater the smoothing factor the less representative the image.</strong></p>
+        </div>
+        <div class="col-sm-8">
+            <h2>How To Read This Graphic</h2>
+            <p>This image shows every temperature reading in Burlington, Vermont from January 1941 through December 2013. The years progress from top to bottom and the days of the year from left to right. So January 1st is the left column and December 31 is the right. 1940 is the top row of the image, 2013 is the bottom row.</p>
+            <p>For mean temperature in Burlington (using the RdYlBu palette), you can see that the peak of summer (the darkest red) is getting hotter and longer since its low in the 1960s and that the winter is getting shorter and milder (less dark blue).</p>
+            <p>What is particularly interesting about this image, is the hourglass shape of the two darkest colors of read. We can see that, though the temperature has warmed since the 1960s, we're now experiencing similar temperatures in Burlington to what we did in the 1940s.</p>
+            <h2>Future Plans</h2>
+            <p>A production quality version of this image would need labels, so that the image can be viewed and understood without explanatory text.</p>
+            <p>Splitting a diverging palette at 32 &deg;F so that blue is below freezing and red is above freezing would produce interesting results.</p>
+            <p>This current image is generated using Python. In the future, we'd like to use Python to generate the data and javascript to paint the image. This would allow us to make the graphic interactive, so you could toggle between smoothed data and raw data and hover over dates to get exact readings.</p>
         </div>
     </div>
 </div>

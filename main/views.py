@@ -25,15 +25,12 @@ def index():
 
 image_args = {
     'filename': Arg(str, default='btv-mean-temp'),
-    'fill_null': Arg(bool, default=True),
-    'smooth_horizontal': Arg(bool, use=lambda n: n == 'on'),
-    'smooth_vertical': Arg(bool, use=lambda n: n == 'on'),
-    'palette': Arg(str, default='Set1'),
+    'palette': Arg(str, default='RdYlBu'),
     'bins': Arg(str, default='8'),
     'data_width': Arg(int, default=2),
     'data_height': Arg(int, default=4),
     'continuity': Arg(float, default=0.2),
-    'recursion': Arg(int, default=3),
+    'recursion': Arg(int, default=2),
     'start_index': Arg(int, default=0),
     'save_image': Arg(bool),
 }
